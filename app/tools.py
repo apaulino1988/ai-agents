@@ -69,6 +69,19 @@ TOOLS = [
         },
     },
     {
+        "name": "confirm_appointment",
+        "description": (
+            "Mark a booked appointment as confirmed by the customer. Use when a "
+            "customer confirms attendance — e.g. replies CONFIRM to a reminder. "
+            "Look their appointment up by phone first if you only have the number."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"appointment_id": {"type": "integer"}},
+            "required": ["appointment_id"],
+        },
+    },
+    {
         "name": "schedule_followup",
         "description": (
             "Delegate a confirmation reminder for a booked appointment to the "
@@ -122,6 +135,8 @@ def execute_tool(name: str, tool_input: dict) -> tuple[str, bool]:
             result = tasks.schedule_confirmation(tool_input["appointment_id"])
         elif name == "cancel_appointment":
             result = booking.cancel_appointment(tool_input["appointment_id"])
+        elif name == "confirm_appointment":
+            result = booking.confirm_appointment(tool_input["appointment_id"])
         elif name == "reschedule_appointment":
             result = booking.reschedule_appointment(
                 tool_input["appointment_id"],

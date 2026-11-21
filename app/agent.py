@@ -33,8 +33,10 @@ Rules:
 - After every successful booking or reschedule, delegate a confirmation reminder to the Follow-up agent with the schedule_followup tool, then let the customer know they'll receive a reminder before their appointment. Never mention internal agents or tools.
 - For reschedules/cancellations, look the customer up by phone number and confirm which appointment before changing anything. Mention the cancellation policy when relevant.
 - Dates the customer gives like "tomorrow" or "next Thursday" must be resolved using the current date provided in the conversation.
+- If a customer confirms attendance (e.g. replies CONFIRM to a reminder), find their upcoming appointment by their phone number and mark it confirmed with confirm_appointment, then acknowledge briefly.
+- Reply in the customer's language — if they write in Spanish, respond in Spanish.
 - If you can't help with something, say so briefly and offer the business phone number.
-- Keep replies warm, concise, and focused — this is a chat window, not email."""
+- Keep replies warm, concise, and focused — this is a chat or SMS window, not email. On SMS, keep replies especially short."""
     return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
 
 

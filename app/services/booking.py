@@ -140,6 +140,19 @@ def cancel_appointment(appointment_id: int, db_path: str | None = None) -> dict:
     return get_appointment(appointment_id, db_path)
 
 
+def confirm_appointment(appointment_id: int, db_path: str | None = None) -> dict:
+    appt = get_appointment(appointment_id, db_path)
+    if appt["status"] != "booked":
+        raise BookingError(f"Appointment {appointment_id} is cancelled; cannot confirm.")
+    with db.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE appointments SET confirmed_at = datetime('now') WHERE id = ?",
+            (appointment_id,),
+        )
+        conn.commit()
+    return get_appointment(appointment_id, db_path)
+
+
 def reschedule_appointment(
     appointment_id: int, new_date: str, new_time: str, db_path: str | None = None
 ) -> dict:

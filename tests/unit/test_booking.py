@@ -64,6 +64,21 @@ def test_cancel_frees_slot(temp_db):
         booking.cancel_appointment(appt["id"])  # already cancelled
 
 
+def test_confirm_appointment(temp_db):
+    appt = booking.book_appointment("cleaning", MONDAY, "10:00", "Alice", "555-0001")
+    assert appt["confirmed_at"] is None
+    confirmed = booking.confirm_appointment(appt["id"])
+    assert confirmed["confirmed_at"] is not None
+    assert confirmed["status"] == "booked"
+
+
+def test_confirm_cancelled_appointment_fails(temp_db):
+    appt = booking.book_appointment("cleaning", MONDAY, "10:00", "Alice", "555-0001")
+    booking.cancel_appointment(appt["id"])
+    with pytest.raises(booking.BookingError):
+        booking.confirm_appointment(appt["id"])
+
+
 def test_reschedule_moves_appointment(temp_db):
     appt = booking.book_appointment("cleaning", MONDAY, "10:00", "Alice", "555-0001")
     moved = booking.reschedule_appointment(appt["id"], MONDAY, "13:00")

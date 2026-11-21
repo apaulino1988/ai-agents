@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     customer_name TEXT NOT NULL,
     customer_phone TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'booked',   -- booked | cancelled
+    confirmed_at TEXT,                       -- set when customer confirms
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -59,4 +60,13 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     conn = sqlite3.connect(path or db_path())
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Additive migrations for databases created before a column existed."""
+    try:
+        conn.execute("ALTER TABLE appointments ADD COLUMN confirmed_at TEXT")
+    except sqlite3.OperationalError:
+        pass  # column already exists

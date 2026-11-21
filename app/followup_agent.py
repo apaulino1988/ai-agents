@@ -8,7 +8,7 @@ to the customer (outbox channel until M3 brings real SMS).
 import json
 
 from app import agent as agent_client
-from app.services import booking, knowledge, outbox, tasks
+from app.services import booking, channels, knowledge, tasks
 
 MODEL = agent_client.MODEL
 MAX_TOKENS = 4096
@@ -54,6 +54,7 @@ Business facts you may use:
 Rules:
 - For an appointment confirmation task: fetch the appointment, then send ONE friendly SMS-length reminder to the customer. Include the service name, weekday + date, time, and location. Ask them to reply CONFIRM, or to call {p['phone']} to reschedule or cancel.
 - Address the customer by first name. No internal jargon, no agent talk.
+- Write in the customer's language if known from context (default English).
 - After sending, reply with a one-line summary of what you did (this is logged as the task result)."""
     return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
 
@@ -68,14 +69,20 @@ def _execute_tool(name: str, tool_input: dict, task: dict) -> tuple[str, bool, b
                 False,
             )
         if name == "send_message":
-            record = outbox.record(
+            record = channels.send(
                 to_phone=tool_input["to_phone"],
                 body=tool_input["body"],
                 appointment_id=task["payload"].get("appointment_id"),
             )
-            return json.dumps({"sent": True, "outbox_id": record["id"]}), False, True
+            return (
+                json.dumps(
+                    {"sent": True, "channel": record["channel"], "outbox_id": record["id"]}
+                ),
+                False,
+                True,
+            )
         return f"Unknown tool: {name}", True, False
-    except booking.BookingError as exc:
+    except (booking.BookingError, channels.ChannelError) as exc:
         return str(exc), True, False
 
 

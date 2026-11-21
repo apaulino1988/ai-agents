@@ -2,13 +2,15 @@
 
 import uuid
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app import agent, db, followup_agent
+from app.services import channels
 from app.services import outbox as outbox_service
 from app.services import tasks as tasks_service
 
@@ -61,6 +63,36 @@ def chat(req: ChatRequest) -> ChatResponse:
     _sessions[session_id] = history
     _log(session_id, "assistant", reply)
     return ChatResponse(session_id=session_id, reply=reply)
+
+
+@app.post("/webhooks/sms")
+async def sms_webhook(request: Request) -> Response:
+    """Inbound SMS (Twilio): customer texts go to the Secretary; reply is TwiML."""
+    form = dict(await request.form())
+    if channels.validation_enabled():
+        signature = request.headers.get("X-Twilio-Signature", "")
+        if not channels.validate_signature(str(request.url), form, signature):
+            raise HTTPException(status_code=403, detail="Invalid Twilio signature.")
+
+    from_phone = (form.get("From") or "").strip()
+    body = (form.get("Body") or "").strip()
+    if not from_phone or not body:
+        raise HTTPException(status_code=400, detail="Missing From or Body.")
+
+    session_id = f"sms:{from_phone}"
+    history = _sessions.get(session_id, [])
+    _log(session_id, "user", body)
+    reply, history = agent.run_turn(
+        history, f"[Channel: SMS. Customer phone: {from_phone}]\n{body}"
+    )
+    _sessions[session_id] = history
+    _log(session_id, "assistant", reply)
+
+    twiml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f"<Response><Message>{escape(reply)}</Message></Response>"
+    )
+    return Response(content=twiml, media_type="application/xml")
 
 
 @app.post("/agents/followup/run")
