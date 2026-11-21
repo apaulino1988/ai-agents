@@ -67,23 +67,28 @@ def chat(req: ChatRequest) -> ChatResponse:
 
 @app.post("/webhooks/sms")
 async def sms_webhook(request: Request) -> Response:
-    """Inbound SMS (Twilio): customer texts go to the Secretary; reply is TwiML."""
+    """Inbound SMS/WhatsApp (Twilio): customer messages go to the Secretary; reply is TwiML."""
     form = dict(await request.form())
     if channels.validation_enabled():
         signature = request.headers.get("X-Twilio-Signature", "")
         if not channels.validate_signature(str(request.url), form, signature):
             raise HTTPException(status_code=403, detail="Invalid Twilio signature.")
 
-    from_phone = (form.get("From") or "").strip()
+    from_raw = (form.get("From") or "").strip()
     body = (form.get("Body") or "").strip()
-    if not from_phone or not body:
+    if not from_raw or not body:
         raise HTTPException(status_code=400, detail="Missing From or Body.")
 
-    session_id = f"sms:{from_phone}"
+    channel = "whatsapp" if from_raw.startswith("whatsapp:") else "sms"
+    from_phone = channels.normalize_phone(from_raw)
+    channels.record_preference(from_phone, channel)
+    label = "WhatsApp" if channel == "whatsapp" else "SMS"
+
+    session_id = f"{channel}:{from_phone}"
     history = _sessions.get(session_id, [])
     _log(session_id, "user", body)
     reply, history = agent.run_turn(
-        history, f"[Channel: SMS. Customer phone: {from_phone}]\n{body}"
+        history, f"[Channel: {label}. Customer phone: {from_phone}]\n{body}"
     )
     _sessions[session_id] = history
     _log(session_id, "assistant", reply)

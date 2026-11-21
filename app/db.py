@@ -40,6 +40,12 @@ CREATE TABLE IF NOT EXISTS agent_tasks (
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS channel_prefs (
+    phone TEXT PRIMARY KEY,              -- E.164, never whatsapp:-prefixed
+    preferred_channel TEXT NOT NULL DEFAULT 'sms',  -- sms | whatsapp
+    last_contact_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS outbox (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     to_phone TEXT NOT NULL,

@@ -69,7 +69,7 @@ def _execute_tool(name: str, tool_input: dict, task: dict) -> tuple[str, bool, b
                 False,
             )
         if name == "send_message":
-            record = channels.send(
+            record = channels.send_preferred(
                 to_phone=tool_input["to_phone"],
                 body=tool_input["body"],
                 appointment_id=task["payload"].get("appointment_id"),
