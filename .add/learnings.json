@@ -2,5 +2,84 @@
   "$schema": "https://github.com/MountainUnicorn/add/learnings.schema.json",
   "version": "1.0.0",
   "project": "ai-agents",
-  "entries": []
+  "entries": [
+    {
+      "id": "L-001",
+      "title": "Task-queue handoff is the multi-agent protocol",
+      "body": "agent_tasks table (from_agent, to_agent, task_type, payload, due_at, status) is the delegation mechanism. The delegating agent decides via a tool call (schedule_followup); the receiving agent runs its own Claude loop independently. Proven live: Secretary booked, delegated, Follow-up composed and sent the reminder. Reuse for every future role.",
+      "scope": "project",
+      "stack": ["python", "sqlite", "claude-api"],
+      "category": "architecture",
+      "severity": "high",
+      "source": "ai-agents",
+      "date": "2026-11-21",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-002",
+      "title": "Service layer separation enables agent reuse",
+      "body": "booking/knowledge as plain Python services (no agent imports) meant the Follow-up agent reused them with zero changes — validating the design constraint set at init. Keep all business capability in app/services/, agents only orchestrate.",
+      "scope": "project",
+      "stack": ["python", "fastapi"],
+      "category": "architecture",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-21",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-003",
+      "title": "Machine Python is 3.14.6, not configured 3.12",
+      "body": "All dependencies (fastapi, anthropic, pydantic) are compatible with 3.14.6. Config updated to match reality at the 2026-11-21 retro.",
+      "scope": "project",
+      "stack": ["python"],
+      "category": "technical",
+      "severity": "low",
+      "source": "ai-agents",
+      "date": "2026-11-20",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-004",
+      "title": "Secrets go only in gitignored .env, never .env.example",
+      "body": "User pasted a real API key into the tracked .env.example — would have leaked to GitHub on next push. Moved to .env and restored the placeholder before any commit. Always double-check which env file receives a secret; .env.example is public documentation.",
+      "scope": "workstation",
+      "stack": ["git", "dotenv"],
+      "category": "anti-pattern",
+      "severity": "high",
+      "source": "ai-agents",
+      "date": "2026-11-21",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-005",
+      "title": "Windows zombie socket can hold a port after process death",
+      "body": "A killed PID (5664) remained in netstat as LISTENING on 127.0.0.1:8000 with no live process. New binds fail with WinError 10048. Fastest fix: use another port; a reboot clears the zombie entry.",
+      "scope": "workstation",
+      "stack": ["windows", "uvicorn"],
+      "category": "technical",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-21",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-006",
+      "title": "gh OAuth needs 'workflow' scope to push CI files",
+      "body": "A default `gh auth login` token lacks the workflow scope; pushing .github/workflows/*.yml is rejected by GitHub. Fix: `gh auth refresh -h github.com -s workflow` (device-code flow).",
+      "scope": "workstation",
+      "stack": ["gh", "github-actions"],
+      "category": "technical",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-20",
+      "classified_by": "human",
+      "checkpoint_type": "retro"
+    }
+  ]
 }

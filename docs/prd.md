@@ -92,20 +92,20 @@ The long-term architecture is a team of role-based agents (Secretary, Follow-up,
 
 ## 6. Milestones & Roadmap
 
-### Current Maturity: POC
+### Current Maturity: ALPHA (promoted 2026-11-21, retro-verified)
 
 ### Roadmap
 
 | Milestone | Goal | Target Maturity | Status | Success Criteria |
 |-----------|------|-----------------|--------|------------------|
-| M1: secretary-mvp | One solid AI Secretary: FAQs, quotes, bookings via web chat | poc → alpha | NOW | A full booking conversation completes end-to-end with zero human help |
-| M2: agent-teamwork | Follow-up agent + handoff protocol; agents collaborate as a team | alpha | NEXT | Secretary delegates to Follow-up; reminder/confirmation completes across agents |
-| M3: real-channels | SMS/WhatsApp (Twilio), external calendars (Google/Outlook), multi-language (EN/ES) | beta | LATER | A real business runs on real channels with its real calendar |
+| M1: secretary-mvp | One solid AI Secretary: FAQs, quotes, bookings via web chat | poc → alpha | ✅ DONE 2026-11-21 | Met: live booking completed end-to-end with zero human help |
+| M2: agent-teamwork | Follow-up agent + handoff protocol; agents collaborate as a team | alpha | ✅ DONE 2026-11-21 | Met: Secretary delegated to Follow-up; reminder completed across agents |
+| M3: real-channels | SMS/WhatsApp (Twilio), external calendars (Google/Outlook), multi-language (EN/ES) | beta | NOW | A real business runs on real channels with its real calendar |
 | M4: onboarding | Multi-tenant setup, business dashboard, AWS production deployment | beta | LATER | First paying businesses onboarded self-serve |
 
 ### Milestone Detail
 
-#### M1: secretary-mvp [NOW]
+#### M1: secretary-mvp [DONE]
 **Goal:** Prove a Claude-powered Secretary agent can answer business questions accurately and complete bookings end-to-end through a web chat.
 **Appetite:** Small — a working POC, not a polished product.
 **Target maturity:** poc (promote to alpha on completion)

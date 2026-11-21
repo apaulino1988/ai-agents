@@ -1,6 +1,6 @@
 # Spec: secretary-agent (M1 MVP)
 
-**Status:** In progress · **Maturity:** POC · **Created:** 2026-11-20
+**Status:** Complete (verified live 2026-11-21) · **Created:** 2026-11-20
 
 ## Goal
 A Claude-powered AI Secretary that handles a small business's front office over web chat: answers questions about services, hours, pricing/quotes, and books/reschedules/cancels appointments — end-to-end, with zero human intervention.

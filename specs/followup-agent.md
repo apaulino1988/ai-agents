@@ -1,6 +1,6 @@
 # Spec: followup-agent (M2 — agent teamwork)
 
-**Status:** In progress · **Maturity:** POC · **Created:** 2026-11-21
+**Status:** Complete (verified live 2026-11-21) · **Created:** 2026-11-21
 
 ## Goal
 Prove agents collaborate as a team: the Secretary agent delegates work to a

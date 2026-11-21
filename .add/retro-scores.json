@@ -1,0 +1,15 @@
+{
+  "$schema": "https://github.com/MountainUnicorn/add/retro-scores.schema.json",
+  "version": "1.0.0",
+  "project": "ai-agents",
+  "entries": [
+    {
+      "date": "2026-11-21",
+      "collab_score": 8.7,
+      "add_effectiveness": 6.5,
+      "swarm_effectiveness": 7.2,
+      "retro_file": ".add/retros/retro-2026-11-21.md",
+      "context": "collaborative"
+    }
+  ]
+}

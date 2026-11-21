@@ -8,16 +8,16 @@
     "author": "Andres"
   },
   "maturity": {
-    "level": "poc",
-    "promoted_from": null,
-    "promoted_date": null,
-    "next_promotion_criteria": "Promote to alpha when: Secretary agent POC proves the concept end-to-end (one real booking conversation), specs exist for the features being built, and tests accompany new code consistently. Run /add:retro to promote."
+    "level": "alpha",
+    "promoted_from": "poc",
+    "promoted_date": "2026-11-21",
+    "next_promotion_criteria": "Promote to beta when: measured test coverage >50%, PR-based workflow on protected main, 2+ environments live (local + AWS), spec-driven and TDD evidence sustained. Run /add:retro to promote."
   },
   "architecture": {
     "languages": [
       {
         "name": "Python",
-        "version": "3.12",
+        "version": "3.14",
         "role": "backend"
       },
       {
@@ -153,7 +153,7 @@
     "archival_max_severity": "medium"
   },
   "planning": {
-    "current_milestone": "M1-secretary-mvp",
+    "current_milestone": "M3-real-channels",
     "current_cycle": null,
     "wip_limit": 1,
     "parallel_agents": 2,

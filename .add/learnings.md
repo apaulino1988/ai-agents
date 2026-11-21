@@ -25,6 +25,7 @@
 
 ## What Worked
 <!-- Patterns, approaches, tools that proved effective -->
+- 2026-11-21 (retro): Speed — zero → two working agents in 2 days. Live demos (real booking, real handoff) over test-only verification. Full entries in .add/learnings.json (L-001…L-006).
 
 ## What Didn't Work
 <!-- Patterns, approaches, tools that caused problems -->
