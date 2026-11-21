@@ -1,0 +1,52 @@
+{
+  "name": "Bright Smile Dental Studio",
+  "tagline": "Gentle, modern dental care for the whole family",
+  "description": "A family dental practice offering cleanings, exams, whitening, and restorative care.",
+  "location": "123 Main Street, Suite 4, Springfield",
+  "phone": "(555) 010-2030",
+  "email": "hello@brightsmile.example",
+  "hours": {
+    "monday": ["09:00", "17:00"],
+    "tuesday": ["09:00", "17:00"],
+    "wednesday": ["09:00", "17:00"],
+    "thursday": ["09:00", "19:00"],
+    "friday": ["09:00", "15:00"],
+    "saturday": ["10:00", "14:00"],
+    "sunday": null
+  },
+  "services": [
+    {
+      "id": "cleaning",
+      "name": "Dental Cleaning & Exam",
+      "duration_minutes": 60,
+      "price_usd": 120,
+      "description": "Routine cleaning, polish, and dentist exam. Recommended every 6 months."
+    },
+    {
+      "id": "whitening",
+      "name": "Teeth Whitening",
+      "duration_minutes": 90,
+      "price_usd": 350,
+      "description": "In-office professional whitening session."
+    },
+    {
+      "id": "consultation",
+      "name": "New Patient Consultation",
+      "duration_minutes": 30,
+      "price_usd": 0,
+      "description": "Free consultation for new patients — meet the dentist and plan treatment."
+    },
+    {
+      "id": "filling",
+      "name": "Cavity Filling",
+      "duration_minutes": 45,
+      "price_usd": 210,
+      "description": "Tooth-colored composite filling, per tooth. Final quote may vary after exam."
+    }
+  ],
+  "policies": [
+    "Please arrive 10 minutes before your appointment.",
+    "Cancellations require 24 hours notice to avoid a $25 fee.",
+    "We accept most major insurance plans — bring your insurance card."
+  ]
+}

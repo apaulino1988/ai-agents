@@ -32,6 +32,7 @@
 ## Agent Checkpoints
 <!-- Automatic entries from verification, TDD cycles, deploys, away sessions -->
 <!-- These are processed and archived during /add:retro -->
+- 2026-11-20 [post-verify] secretary-agent first build: FastAPI + Claude (claude-opus-5, manual tool-use loop, cached system prompt), SQLite booking service, static chat page. ruff clean, 18/18 unit tests pass. Agent chat untested live — requires ANTHROPIC_API_KEY in .env. Python on this machine is 3.14.6 (not 3.12 as configured); all deps compatible.
 
 ## Profile Update Candidates
 <!-- Cross-project patterns flagged for promotion to ~/.claude/add/profile.md -->
