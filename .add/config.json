@@ -1,0 +1,162 @@
+{
+  "$schema": "https://github.com/MountainUnicorn/add/config.schema.json",
+  "version": "0.5.0",
+  "project": {
+    "name": "ai-agents",
+    "description": "A team of cooperating AI agents that handle office front-desk work for small businesses — booking appointments, following up with customers, and answering questions about services, quotes, and operating hours. MVP: a single AI Secretary agent.",
+    "created": "2026-11-20",
+    "author": "Andres"
+  },
+  "maturity": {
+    "level": "poc",
+    "promoted_from": null,
+    "promoted_date": null,
+    "next_promotion_criteria": "Promote to alpha when: Secretary agent POC proves the concept end-to-end (one real booking conversation), specs exist for the features being built, and tests accompany new code consistently. Run /add:retro to promote."
+  },
+  "architecture": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": "3.12",
+        "role": "backend"
+      },
+      {
+        "name": "TypeScript",
+        "version": "5.x",
+        "role": "frontend"
+      }
+    ],
+    "backend": {
+      "framework": "FastAPI",
+      "version": "0.115+",
+      "runtime": "Python 3.12 (uvicorn)"
+    },
+    "frontend": {
+      "framework": "React (minimal embeddable chat widget)",
+      "version": "18",
+      "bundler": "vite"
+    },
+    "database": {
+      "type": "sqlite (local dev) -> postgresql (production)",
+      "version": "PostgreSQL 16"
+    },
+    "containerized": false,
+    "container_strategy": "none",
+    "suggested_by_claude": true
+  },
+  "infrastructure": {
+    "git_host": "github",
+    "git_remote": null,
+    "cloud_provider": "aws",
+    "cloud_services": ["TBD — likely ECS Fargate or App Runner for the FastAPI service, RDS PostgreSQL"],
+    "cicd": {
+      "platform": "github-actions",
+      "scaffolded_by_add": true,
+      "pipeline_file": ".github/workflows/ci.yml"
+    },
+    "infrastructure_as_code": "none"
+  },
+  "environments": {
+    "tier": 2,
+    "local": {
+      "run": "uvicorn app.main:app --reload",
+      "test": "pytest",
+      "e2e": null,
+      "url": "http://localhost:8000"
+    },
+    "dev": {
+      "deploy_trigger": null,
+      "url": null,
+      "verify": ["unit_tests", "integration_tests"]
+    },
+    "staging": {
+      "deploy_trigger": null,
+      "url": null,
+      "verify": ["e2e_tests", "performance_tests"]
+    },
+    "production": {
+      "deploy_trigger": "manual via /add:deploy (AWS)",
+      "verify": ["smoke_tests"],
+      "url": "TBD",
+      "requires_approval": true
+    }
+  },
+  "quality": {
+    "mode": "spike",
+    "coverage_threshold": 50,
+    "type_check_blocking": false,
+    "e2e_required": false,
+    "screenshot_protocol": false,
+    "lint": {
+      "backend": "ruff check .",
+      "frontend": null
+    },
+    "typecheck": {
+      "backend": "mypy app --ignore-missing-imports",
+      "frontend": null
+    },
+    "test": {
+      "unit": "pytest tests/unit",
+      "integration": "pytest tests/integration",
+      "e2e": null
+    }
+  },
+  "collaboration": {
+    "autonomy_level": "autonomous",
+    "team_size": "solo",
+    "commit_review_gate": false,
+    "pr_review_gate": false,
+    "deploy_approval_required": true
+  },
+  "source_control": {
+    "branching": "trunk-based (short-lived feature branches optional)",
+    "default_branch": "main",
+    "commit_convention": "conventional",
+    "pr_template": false,
+    "protected_branches": ["main"]
+  },
+  "branding": {
+    "accentColor": "#6366f1",
+    "presetName": "purple",
+    "palette": {
+      "accent": "#6366f1",
+      "accentLight": "#818cf8",
+      "accentDark": "#4f46e5",
+      "accentMuted": "#a5b4fc",
+      "accentGlow": "rgba(99,102,241,0.4)",
+      "gradientStart": "#6366f1",
+      "gradientMid": "#8b5cf6",
+      "gradientEnd": "#d946ef",
+      "success": "#22c55e",
+      "warning": "#eab308",
+      "info": "#0ea5e9"
+    },
+    "fonts": null,
+    "tone": null,
+    "logoPath": null,
+    "styleGuideSource": null
+  },
+  "imageGeneration": {
+    "enabled": false,
+    "tool": null,
+    "plugin": null,
+    "nudged": false,
+    "lastDetected": null
+  },
+  "changelog": {
+    "lastProcessedCommit": null,
+    "lastVersionTag": null
+  },
+  "learnings": {
+    "active_cap": 15,
+    "archival_days": 90,
+    "archival_max_severity": "medium"
+  },
+  "planning": {
+    "current_milestone": "M1-secretary-mvp",
+    "current_cycle": null,
+    "wip_limit": 1,
+    "parallel_agents": 2,
+    "cycle_history": []
+  }
+}
