@@ -2,7 +2,7 @@
 
 import json
 
-from app.services import booking
+from app.services import booking, tasks
 
 TOOLS = [
     {
@@ -69,6 +69,20 @@ TOOLS = [
         },
     },
     {
+        "name": "schedule_followup",
+        "description": (
+            "Delegate a confirmation reminder for a booked appointment to the "
+            "Follow-up agent. Call this once after every successful booking or "
+            "reschedule. The reminder is sent to the customer 24 hours before "
+            "the appointment (immediately if it's sooner than that)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"appointment_id": {"type": "integer"}},
+            "required": ["appointment_id"],
+        },
+    },
+    {
         "name": "reschedule_appointment",
         "description": (
             "Move a booked appointment to a new date/time. Check availability for "
@@ -104,6 +118,8 @@ def execute_tool(name: str, tool_input: dict) -> tuple[str, bool]:
             )
         elif name == "find_appointments":
             result = booking.find_appointments(tool_input["customer_phone"])
+        elif name == "schedule_followup":
+            result = tasks.schedule_confirmation(tool_input["appointment_id"])
         elif name == "cancel_appointment":
             result = booking.cancel_appointment(tool_input["appointment_id"])
         elif name == "reschedule_appointment":

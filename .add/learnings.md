@@ -32,6 +32,7 @@
 ## Agent Checkpoints
 <!-- Automatic entries from verification, TDD cycles, deploys, away sessions -->
 <!-- These are processed and archived during /add:retro -->
+- 2026-11-21 [post-verify] followup-agent + handoff protocol: agent task queue (agent_tasks) as the delegation mechanism; Secretary delegates via schedule_followup tool (agent decision, not hardcoded); Follow-up agent runs its own Claude loop and writes reminders to outbox (M3 SMS stand-in). Live demo: booking → task (due appt-24h) → reminder sent, end-to-end across both agents. 28/28 tests, ruff clean.
 - 2026-11-20 [post-verify] secretary-agent first build: FastAPI + Claude (claude-opus-5, manual tool-use loop, cached system prompt), SQLite booking service, static chat page. ruff clean, 18/18 unit tests pass. Agent chat untested live — requires ANTHROPIC_API_KEY in .env. Python on this machine is 3.14.6 (not 3.12 as configured); all deps compatible.
 
 ## Profile Update Candidates

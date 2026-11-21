@@ -26,6 +26,28 @@ CREATE TABLE IF NOT EXISTS conversation_log (
     content TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS agent_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    from_agent TEXT NOT NULL,
+    to_agent TEXT NOT NULL,
+    task_type TEXT NOT NULL,
+    payload TEXT NOT NULL,         -- JSON
+    due_at TEXT,                   -- ISO datetime; NULL = due immediately
+    status TEXT NOT NULL DEFAULT 'pending',  -- pending | done | failed
+    result TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS outbox (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    to_phone TEXT NOT NULL,
+    customer_name TEXT,
+    body TEXT NOT NULL,
+    channel TEXT NOT NULL DEFAULT 'sms-outbox',
+    appointment_id INTEGER,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 

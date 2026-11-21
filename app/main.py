@@ -8,7 +8,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-from app import agent, db
+from app import agent, db, followup_agent
+from app.services import outbox as outbox_service
+from app.services import tasks as tasks_service
 
 load_dotenv()
 
@@ -59,6 +61,29 @@ def chat(req: ChatRequest) -> ChatResponse:
     _sessions[session_id] = history
     _log(session_id, "assistant", reply)
     return ChatResponse(session_id=session_id, reply=reply)
+
+
+@app.post("/agents/followup/run")
+def run_followup(include_future: bool = False) -> dict:
+    """Process due handoff tasks addressed to the Follow-up agent."""
+    results = followup_agent.run_due_tasks(include_future=include_future)
+    return {
+        "processed": len(results),
+        "results": [
+            {"task_id": t["id"], "status": t["status"], "result": t["result"]}
+            for t in results
+        ],
+    }
+
+
+@app.get("/agents/tasks")
+def agent_tasks() -> list[dict]:
+    return tasks_service.list_tasks()
+
+
+@app.get("/outbox")
+def outbox_messages() -> list[dict]:
+    return outbox_service.list_messages()
 
 
 def _log(session_id: str, role: str, content: str) -> None:
