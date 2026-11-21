@@ -3,7 +3,7 @@
 **Version:** 0.1.0
 **Created:** 2026-11-21
 **PRD Reference:** docs/prd.md (M3: real-channels — final item)
-**Status:** Implementing
+**Status:** Complete
 
 ## 1. Overview
 

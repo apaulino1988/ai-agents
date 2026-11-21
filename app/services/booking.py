@@ -8,7 +8,7 @@ from datetime import date as date_cls
 from datetime import datetime, timedelta
 
 from app import db
-from app.services import knowledge
+from app.services import calendar, knowledge
 
 SLOT_MINUTES = 30
 
@@ -59,6 +59,8 @@ def check_availability(date: str, service_id: str, db_path: str | None = None) -
 
     with db.connect(db_path) as conn:
         booked = _booked_intervals(conn, date)
+    # The owner's real calendar blocks slots too (fails open to []).
+    booked += calendar.busy_intervals(date)
 
     slots = []
     cursor = open_t
@@ -103,7 +105,19 @@ def book_appointment(
             ),
         )
         conn.commit()
-        return get_appointment(cur.lastrowid, db_path)
+        appointment_id = cur.lastrowid
+
+    appt = get_appointment(appointment_id, db_path)
+    event_id = calendar.create_event(appt)  # None when disabled or push failed
+    if event_id:
+        with db.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE appointments SET calendar_event_id = ? WHERE id = ?",
+                (event_id, appointment_id),
+            )
+            conn.commit()
+        appt = get_appointment(appointment_id, db_path)
+    return appt
 
 
 def get_appointment(appointment_id: int, db_path: str | None = None) -> dict:
@@ -137,6 +151,8 @@ def cancel_appointment(appointment_id: int, db_path: str | None = None) -> dict:
             (appointment_id,),
         )
         conn.commit()
+    if appt.get("calendar_event_id"):
+        calendar.delete_event(appt["calendar_event_id"])
     return get_appointment(appointment_id, db_path)
 
 

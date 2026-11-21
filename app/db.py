@@ -72,7 +72,11 @@ def connect(path: str | None = None) -> sqlite3.Connection:
 
 def _migrate(conn: sqlite3.Connection) -> None:
     """Additive migrations for databases created before a column existed."""
-    try:
-        conn.execute("ALTER TABLE appointments ADD COLUMN confirmed_at TEXT")
-    except sqlite3.OperationalError:
-        pass  # column already exists
+    for statement in (
+        "ALTER TABLE appointments ADD COLUMN confirmed_at TEXT",
+        "ALTER TABLE appointments ADD COLUMN calendar_event_id TEXT",
+    ):
+        try:
+            conn.execute(statement)
+        except sqlite3.OperationalError:
+            pass  # column already exists
