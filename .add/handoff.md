@@ -1,27 +1,32 @@
 # Session Handoff — ai-agents
 
-**Written:** 2026-11-21 (post-retro, post-M3-deploy)
-**Branch:** main @ `77b6c8e` (pushed, CI green)
+**Written:** 2026-11-21 (post whatsapp-channel TDD cycle)
+**Branch:** main @ `4944ea4` (pushed, CI green)
 
 ## State
 
-- **M3 sms-channel: COMPLETE and deployed.** Real Twilio SMS both directions,
-  outbox fallback without creds, webhook with optional signature validation,
-  CONFIRM flow, ES/EN. 37/37 tests, ruff clean, CI green (first green run ever —
-  root `conftest.py` fixed a bare-pytest import failure that had broken every
-  prior CI run).
-- Second retro of 2026-11-21 archived at `.add/retros/retro-2026-11-21-b.md`.
-  L-007/L-008 promoted to workstation library (WL-004/WL-005).
+- **M3 sms-channel: COMPLETE** (96f6b8b). Twilio SMS both directions, outbox
+  fallback, signature validation, CONFIRM flow, ES/EN.
+- **M3 whatsapp-channel: COMPLETE** (4944ea4). Inbound WhatsApp via the same
+  webhook (normalized `whatsapp:` addresses), outbound reminders route by
+  last-used channel (`channel_prefs`, SMS default), WhatsApp rejections fall
+  back to SMS with reason recorded. First strict RED→GREEN cycle (red commit
+  2df05a0) and first formal /add:verify run; coverage measured at **80%**.
+- 48/48 tests, ruff clean, CI green. Uncommitted: spec status flip to
+  Complete, L-009 learning, this handoff (commit with next deploy).
 
-## Next up (M3 remainder / M4 candidates — confirm with roadmap)
+## Next up (M3 remainder)
 
-- WhatsApp channel (same Twilio API) — was explicitly out of scope for sms-channel.
-- Delivery-status callbacks; per-business numbers (multi-tenant, M4).
-- Toward Beta: measure coverage (>50%), install mypy, start PR workflow,
-  stand up a second environment (AWS), use formal /add:verify.
+- **External calendars (Google/Outlook)** — the last M3 roadmap item.
+- Twilio sandbox live smoke test for WhatsApp (manual, optional).
+- Toward Beta: coverage now measured (80% > 50% ✓); still needed: mypy
+  installed, PR workflow, second environment (AWS).
 
 ## Decisions / gotchas
 
-- Trunk-based commits straight to main (solo, Alpha); production deploys always human-gated.
-- `python-multipart` is a required runtime dep for the webhook (requirements.txt).
-- Write this handoff file at every session end — its absence was a repeated retro finding.
+- Reminder routing = customer's last inbound channel; SMS default (human-decided).
+- 24h WhatsApp window: freeform + automatic SMS fallback; templates deferred to Beta.
+- `TWILIO_WHATSAPP_FROM` enables WhatsApp sends; without it they go via SMS.
+- ADD plugin cache lacks scripts/check-test-count.py (L-009) — RED/GREEN
+  snapshots in .add/cycles/cycle-1/ are manual (pytest --collect-only).
+- Write this handoff at every session end.

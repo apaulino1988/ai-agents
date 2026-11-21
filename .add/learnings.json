@@ -130,6 +130,22 @@
       "date": "2026-11-21",
       "classified_by": "human",
       "checkpoint_type": "deploy"
+    },
+    {
+      "id": "L-009",
+      "title": "ADD 0.11.0 plugin cache ships without scripts/check-test-count.py",
+      "body": "The tdd-cycle skill's RED/GREEN snapshot command points at {plugin}/../../scripts/check-test-count.py, which does not exist in the installed plugin cache. Workaround: manual snapshot JSON from `pytest --collect-only -q` (functions list + count) at .add/cycles/cycle-N/, compared by hand at verify Gate 3.5. Report upstream to MountainUnicorn/add.",
+      "scope": "workstation",
+      "stack": [
+        "add-plugin",
+        "pytest"
+      ],
+      "category": "technical",
+      "severity": "low",
+      "source": "ai-agents",
+      "date": "2026-11-21",
+      "classified_by": "agent",
+      "checkpoint_type": "tdd-cycle"
     }
   ]
 }

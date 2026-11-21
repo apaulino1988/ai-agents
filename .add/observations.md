@@ -5,3 +5,4 @@
 2026-11-21 11:26 | retro | Second retro of day: M3 window reviewed, L-007/L-008 promoted to library (WL-004/WL-005), sms-channel spec marked Complete, first handoff.md written (remediates recurring adherence fail) | benefit: handoff gap closed
 2026-11-21 11:33 | spec | whatsapp-channel spec created (7 ACs, 3 TCs); routing + 24h-window decisions made by human via 2-question condensed interview | benefit: next M3 feature spec'd in minutes
 2026-11-21 11:41 | tdd-cycle+verify | whatsapp-channel: strict RED(10 fail)->GREEN(48 pass)->refactor->verify deploy-level; coverage measured 80%; formal /add:verify run for first time | benefit: adherence gaps from retros closed
+2026-11-21 11:49 | spec | calendar-sync spec created (7 ACs, 4 TCs); provider + scope decided by human via condensed interview | benefit: final M3 feature spec'd
