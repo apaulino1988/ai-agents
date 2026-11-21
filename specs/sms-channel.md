@@ -1,6 +1,6 @@
 # Spec: sms-channel (M3 — real channels)
 
-**Status:** In progress · **Maturity:** Alpha · **Created:** 2026-11-21
+**Status:** Complete · **Maturity:** Alpha · **Created:** 2026-11-21
 
 ## Goal
 Replace the outbox stand-in with a real SMS channel (Twilio) in both
