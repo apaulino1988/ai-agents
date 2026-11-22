@@ -1,4 +1,4 @@
-# Active Learnings (14 of 14)
+# Active Learnings (14 of 15)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
@@ -7,6 +7,8 @@
   Google SA keys download as {project}-{hash}.json, which .gitignore patterns written for data/google-sa.json or *-sa.json do NOT match — the key sat trackable in data/ until renamed. Same session: real Twilio creds were pasted into a tracked doc (docs/smoke-test.md) and scrubbed pre-commit. Pattern (2nd+3rd occurrence after WL-001): secrets drift into tracked files during setup flows; always route … [truncated — full entry in learnings.json]
 - **[high]** Secrets go only in gitignored .env, never .env.example (L-004, 2026-11-21)
   User pasted a real API key into the tracked .env.example â€” would have leaked to GitHub on next push. Moved to .env and restored the placeholder before any commit. Always double-check which env file receives a secret; .env.example is public documentation.
+- **[medium]** A populated .env leaks into unit tests via load_dotenv at collection (L-015, 2026-11-22)
+  pytest imports every test module at collection, so any module importing the app entrypoint runs load_dotenv() before the first test executes — real credentials then enable live integration paths suite-wide (7 booking tests silently hit the real Google Calendar). Invisible until the day .env gains real creds; tests pass in isolation, fail in the full run. Fix: an autouse fixture that delenvs all in… [truncated — full entry in learnings.json]
 ### architecture
 - **[high]** Task-queue handoff is the multi-agent protocol (L-001, 2026-11-21)
   agent_tasks table (from_agent, to_agent, task_type, payload, due_at, status) is the delegation mechanism. The delegating agent decides via a tool call (schedule_followup); the receiving agent runs its own Claude loop independently. Proven live: Secretary booked, delegated, Follow-up composed and sent the reminder. Reuse for every future role.
@@ -31,8 +33,10 @@
   The tdd-cycle skill's RED/GREEN snapshot command points at {plugin}/../../scripts/check-test-count.py, which does not exist in the installed plugin cache. Workaround: manual snapshot JSON from `pytest --collect-only -q` (functions list + count) at .add/cycles/cycle-N/, compared by hand at verify Gate 3.5. Report upstream to MountainUnicorn/add.
 - **[low]** FastAPI form webhooks need python-multipart (L-007, 2026-11-21)
   Twilio posts form-encoded bodies; FastAPI/Starlette form parsing requires the python-multipart package or every webhook request 500s. It is easy to miss locally because nothing imports it directly. Fix: add python-multipart to requirements whenever a route reads request.form().
-- **[low]** Machine Python is 3.14.6, not configured 3.12 (L-003, 2026-11-20)
-  All dependencies (fastapi, anthropic, pydantic) are compatible with 3.14.6. Config updated to match reality at the 2026-11-21 retro.
+
+## Index (1 more — title only, read JSON for full detail)
+
+- [low] L-003 technical: Machine Python is 3.14.6, not configured 3.12 (2026-11-20)
 
 ---
 *Auto-generated. Do not edit — regenerated on each learning write.*

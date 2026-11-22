@@ -214,6 +214,19 @@
       "date": "2026-11-22",
       "classified_by": "human",
       "checkpoint_type": "retro"
+    },
+    {
+      "id": "L-015",
+      "title": "A populated .env leaks into unit tests via load_dotenv at collection",
+      "body": "pytest imports every test module at collection, so any module importing the app entrypoint runs load_dotenv() before the first test executes — real credentials then enable live integration paths suite-wide (7 booking tests silently hit the real Google Calendar). Invisible until the day .env gains real creds; tests pass in isolation, fail in the full run. Fix: an autouse fixture that delenvs all integration vars; tests opt in with monkeypatch.setenv.",
+      "scope": "workstation",
+      "stack": ["pytest", "dotenv", "python"],
+      "category": "anti-pattern",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-22",
+      "classified_by": "agent",
+      "checkpoint_type": "deploy"
     }
   ]
 }
