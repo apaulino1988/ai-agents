@@ -15,7 +15,7 @@
   Hourly auto-retest cron running in session.
 - **Google Calendar:** ✅ PASSED 2026-11-22 — push (A), busy-block (B),
   fail-open (C) all verified against the real calendar
-  (andymd2008@gmail.com, America/New_York; SA key at data/google-sa.json).
+  (owner's Gmail calendar, America/New_York; SA key at data/google-sa.json).
 - **WhatsApp:** ✅ PASSED 2026-11-22 — full conversational loop live
   (Spanish, booking #5, reminder via preference routing, CONFIRM).
 - **M3 LIVE SMOKE: ALL PASS CRITERIA MET.** Retro run 2026-11-22: PRD M3 →
