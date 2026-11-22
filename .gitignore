@@ -20,6 +20,8 @@ widget/dist/
 .env
 .env.*
 !.env.example
+data/google-sa.json
+*-sa.json
 
 # Local databases
 *.db

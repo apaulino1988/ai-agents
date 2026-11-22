@@ -100,8 +100,8 @@ The long-term architecture is a team of role-based agents (Secretary, Follow-up,
 |-----------|------|-----------------|--------|------------------|
 | M1: secretary-mvp | One solid AI Secretary: FAQs, quotes, bookings via web chat | poc → alpha | ✅ DONE 2026-11-21 | Met: live booking completed end-to-end with zero human help |
 | M2: agent-teamwork | Follow-up agent + handoff protocol; agents collaborate as a team | alpha | ✅ DONE 2026-11-21 | Met: Secretary delegated to Follow-up; reminder completed across agents |
-| M3: real-channels | SMS/WhatsApp (Twilio), external calendars (Google/Outlook), multi-language (EN/ES) | beta | NOW | A real business runs on real channels with its real calendar |
-| M4: onboarding | Multi-tenant setup, business dashboard, AWS production deployment | beta | LATER | First paying businesses onboarded self-serve |
+| M3: real-channels | SMS/WhatsApp (Twilio), external calendars (Google/Outlook), multi-language (EN/ES) | beta | ✅ DONE 2026-11-22 | Met: live smoke passed — Spanish WhatsApp conversation → booking → preference-routed reminder → CONFIRM, real Google Calendar push + busy-block + fail-open, state survived restarts. SMS verified to carrier edge (A2P 10DLC registration deferred to M4) |
+| M4: onboarding | Multi-tenant setup, business dashboard, AWS production deployment (incl. A2P 10DLC/toll-free registration) | beta | NOW | First paying businesses onboarded self-serve |
 
 ### Milestone Detail
 
@@ -160,3 +160,4 @@ Minimal embeddable React chat UI (the POC front door; SMS/WhatsApp come in M3).
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-11-20 | 0.1.0 | Andres | Initial draft from /add:init interview |
+| 2026-11-22 | 0.1.1 | Andres + Claude | M3 → DONE (live smoke passed); M4 → NOW; 10DLC registration added to M4 scope |

@@ -18,6 +18,14 @@
       "swarm_effectiveness": 6.0,
       "retro_file": ".add/retros/retro-2026-11-21-b.md",
       "context": "collaborative"
+    },
+    {
+      "date": "2026-11-22",
+      "collab_score": 8.0,
+      "add_effectiveness": 7.8,
+      "swarm_effectiveness": 7.0,
+      "retro_file": ".add/retros/retro-2026-11-22.md",
+      "context": "collaborative"
     }
   ]
 }
