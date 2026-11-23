@@ -2,8 +2,8 @@
 
 **Milestone:** M4 — onboarding
 **Maturity:** alpha
-**Status:** PLANNED
-**Started:** TBD
+**Status:** IN_PROGRESS
+**Started:** 2026-11-23
 **Completed:** TBD
 **Duration Budget:** ~1 week elapsed (owner mostly away; external review queues
 dominate — Twilio/TCR vetting and LLC approval run on outside clocks)
@@ -12,8 +12,8 @@ dominate — Twilio/TCR vetting and LLC approval run on outside clocks)
 
 | Feature | Current Pos | Target Pos | Assigned | Est. Effort | Validation |
 |---------|-------------|-----------|----------|-------------|------------|
-| aws-deploy | NOT_SHAPED | IN_PROGRESS | Claude (spec+code) + Andres (AWS account) | spec ~0.5d, infra ~1-2d | Spec approved async; app live on App Runner; /health green from the internet; cost model < $15/mo |
-| a2p-registration | NOT_SHAPED | SPECCED (filing gated on LLC EIN) | Andres (LLC, filing) + Claude (runbook, API prep) | runbook ~0.5d; filing 30min once EIN exists | Runbook complete; brand+campaign filed when EIN arrives; delivery to a US number verified when approved |
+| aws-deploy | **DOWNHILL** (code done 2026-11-23; awaiting instance+deploy) | IN_PROGRESS | Claude (spec+code) + Andres (AWS account) | spec ~0.5d, infra ~1-2d | Spec v0.2.0 APPROVED (Lightsail — App Runner closed to new customers); Dockerfile/compose/Caddy/Litestream/scripts/runbook shipped; GHCR image builds in CI; remaining: Andres provisions instance (runbook §1) + approves first deploy |
+| a2p-registration | **SPECCED** (runbook done 2026-11-23; filing gated on LLC EIN) | SPECCED | Andres (LLC, filing) + Claude (runbook, API prep) | filing 30min once EIN exists | docs/a2p-runbook.md complete w/ verified fees (~$65 + $1.50/mo), prewritten campaign text; landing page w/ privacy+opt-in LIVE (GH Pages) for TCR vetting |
 
 ## Dependencies & Serialization
 
