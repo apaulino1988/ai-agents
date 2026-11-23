@@ -23,9 +23,20 @@ def isolate_integration_env(monkeypatch):
         monkeypatch.delenv(var, raising=False)
 
 
-@pytest.fixture
-def temp_db(tmp_path, monkeypatch):
-    """Point the app at a throwaway SQLite database."""
+@pytest.fixture(autouse=True)
+def _isolated_db(tmp_path, monkeypatch):
+    """Every unit test gets a throwaway SQLite database.
+
+    Autouse because profiles now live in the DB (multi-tenant AC-006): any
+    test touching knowledge/booking would otherwise read — or migrate! — the
+    developer's real secretary.db.
+    """
     path = tmp_path / "test.db"
     monkeypatch.setenv("SECRETARY_DB_PATH", str(path))
     return str(path)
+
+
+@pytest.fixture
+def temp_db(_isolated_db):
+    """Point the app at a throwaway SQLite database."""
+    return _isolated_db

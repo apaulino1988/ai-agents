@@ -29,11 +29,12 @@ class ChannelError(Exception):
 
 
 def twilio_config() -> dict | None:
+    """Platform Twilio account (shared across tenants); From numbers are
+    per-tenant — see sms_from / whatsapp_from."""
     sid = os.environ.get("TWILIO_ACCOUNT_SID")
     token = os.environ.get("TWILIO_AUTH_TOKEN")
-    from_number = os.environ.get("TWILIO_FROM_NUMBER")
-    if sid and token and from_number:
-        return {"sid": sid, "token": token, "from": from_number}
+    if sid and token:
+        return {"sid": sid, "token": token}
     return None
 
 
@@ -42,9 +43,30 @@ def normalize_phone(address: str) -> str:
     return address.removeprefix("whatsapp:").strip()
 
 
-def whatsapp_from() -> str | None:
-    """Configured WhatsApp sender, normalized to the `whatsapp:+E164` form."""
-    raw = os.environ.get("TWILIO_WHATSAPP_FROM")
+def _business_row(business_id: int, db_path: str | None = None) -> dict | None:
+    from app.services import tenants  # lazy: avoid cycle at import time
+
+    return tenants.get_business(business_id, db_path)
+
+
+def sms_from(business_id: int = 1, db_path: str | None = None) -> str | None:
+    """The tenant's outbound SMS number. For the default tenant only, the
+    original TWILIO_FROM_NUMBER env var is the fallback — other tenants never
+    send from a number they don't own (isolation; outbox record-only without)."""
+    business = _business_row(business_id, db_path) or {}
+    number = business.get("twilio_number")
+    if not number and business_id == 1:
+        number = os.environ.get("TWILIO_FROM_NUMBER")
+    return number
+
+
+def whatsapp_from(business_id: int = 1, db_path: str | None = None) -> str | None:
+    """The tenant's WhatsApp sender, normalized to the `whatsapp:+E164` form.
+    Default tenant falls back to TWILIO_WHATSAPP_FROM; others use their row only."""
+    business = _business_row(business_id, db_path) or {}
+    raw = business.get("whatsapp_sender")
+    if not raw and business_id == 1:
+        raw = os.environ.get("TWILIO_WHATSAPP_FROM")
     if not raw:
         return None
     return raw if raw.startswith("whatsapp:") else f"whatsapp:{raw}"
@@ -59,8 +81,14 @@ def _post(cfg: dict, from_addr: str, to_addr: str, body: str) -> httpx.Response:
     )
 
 
-def _deliver_sms(cfg: dict, to_phone: str, body: str, fallback_reason: str | None = None) -> str:
-    response = _post(cfg, cfg["from"], to_phone, body)
+def _deliver_sms(
+    cfg: dict,
+    from_number: str,
+    to_phone: str,
+    body: str,
+    fallback_reason: str | None = None,
+) -> str:
+    response = _post(cfg, from_number, to_phone, body)
     if response.status_code >= 400:
         prefix = f"after {fallback_reason}, " if fallback_reason else ""
         raise ChannelError(
@@ -69,20 +97,29 @@ def _deliver_sms(cfg: dict, to_phone: str, body: str, fallback_reason: str | Non
     return f"sms-twilio (fallback: {fallback_reason})" if fallback_reason else "sms-twilio"
 
 
-def _deliver(cfg: dict, to_phone: str, body: str, channel: str) -> str:
+def _deliver(
+    cfg: dict,
+    from_number: str,
+    wa_from: str | None,
+    to_phone: str,
+    body: str,
+    channel: str,
+) -> str:
     """Deliver via Twilio; returns the outbox channel label. Raises ChannelError."""
-    wa_from = whatsapp_from()
     if channel != "whatsapp":
-        return _deliver_sms(cfg, to_phone, body)
+        return _deliver_sms(cfg, from_number, to_phone, body)
     if not wa_from:
-        return _deliver_sms(cfg, to_phone, body, fallback_reason="no whatsapp sender")
+        return _deliver_sms(
+            cfg, from_number, to_phone, body, fallback_reason="no whatsapp sender"
+        )
     response = _post(cfg, wa_from, f"whatsapp:{to_phone}", body)
     if response.status_code < 400:
         return "whatsapp-twilio"
     # 24h window / template rule / not a WhatsApp user: fall back to SMS so
     # the message still arrives (spec AC-004).
     return _deliver_sms(
-        cfg, to_phone, body, fallback_reason=f"whatsapp {response.status_code}"
+        cfg, from_number, to_phone, body,
+        fallback_reason=f"whatsapp {response.status_code}",
     )
 
 
@@ -93,14 +130,23 @@ def send(
     appointment_id: int | None = None,
     db_path: str | None = None,
     channel: str = "sms",
+    business_id: int = 1,
 ) -> dict:
-    """Send on `channel` ("sms" | "whatsapp"), record-only without Twilio creds.
+    """Send on `channel` ("sms" | "whatsapp"), record-only without Twilio creds
+    or when the tenant has no sending number of its own.
 
     Returns the outbox row; its `channel` field records what actually happened.
     """
     to_phone = normalize_phone(to_phone)
     cfg = twilio_config()
-    recorded = _deliver(cfg, to_phone, body, channel) if cfg else f"{channel}-outbox"
+    from_number = sms_from(business_id, db_path)
+    if cfg and from_number:
+        recorded = _deliver(
+            cfg, from_number, whatsapp_from(business_id, db_path),
+            to_phone, body, channel,
+        )
+    else:
+        recorded = f"{channel}-outbox"
     return outbox.record(
         to_phone=to_phone,
         body=body,
@@ -108,32 +154,46 @@ def send(
         appointment_id=appointment_id,
         channel=recorded,
         db_path=db_path,
+        business_id=business_id,
     )
 
 
-def send_preferred(to_phone: str, body: str, **kwargs) -> dict:
+def send_preferred(to_phone: str, body: str, business_id: int = 1, **kwargs) -> dict:
     """Send on the customer's preferred channel (last inbound; SMS default)."""
     phone = normalize_phone(to_phone)
-    return send(phone, body, channel=preferred_channel(phone), **kwargs)
+    return send(
+        phone,
+        body,
+        channel=preferred_channel(phone, business_id=business_id),
+        business_id=business_id,
+        **kwargs,
+    )
 
 
-def record_preference(phone: str, channel: str, db_path: str | None = None) -> None:
+def record_preference(
+    phone: str, channel: str, db_path: str | None = None, business_id: int = 1
+) -> None:
     """Upsert the customer's channel preference from an inbound message."""
     with db.connect(db_path) as conn:
         conn.execute(
-            "INSERT INTO channel_prefs (phone, preferred_channel) VALUES (?, ?)"
-            " ON CONFLICT(phone) DO UPDATE SET preferred_channel = excluded.preferred_channel,"
+            "INSERT INTO channel_prefs (business_id, phone, preferred_channel)"
+            " VALUES (?, ?, ?)"
+            " ON CONFLICT(business_id, phone) DO UPDATE"
+            " SET preferred_channel = excluded.preferred_channel,"
             " last_contact_at = datetime('now')",
-            (normalize_phone(phone), channel),
+            (business_id, normalize_phone(phone), channel),
         )
         conn.commit()
 
 
-def preferred_channel(phone: str, db_path: str | None = None) -> str:
+def preferred_channel(
+    phone: str, db_path: str | None = None, business_id: int = 1
+) -> str:
     with db.connect(db_path) as conn:
         row = conn.execute(
-            "SELECT preferred_channel FROM channel_prefs WHERE phone = ?",
-            (normalize_phone(phone),),
+            "SELECT preferred_channel FROM channel_prefs"
+            " WHERE phone = ? AND business_id = ?",
+            (normalize_phone(phone), business_id),
         ).fetchone()
     return row["preferred_channel"] if row else "sms"
 

@@ -44,12 +44,12 @@ TOOLS = [
 ]
 
 
-def system_prompt() -> list[dict]:
-    p = knowledge.get_profile()
+def system_prompt(business_id: int = 1) -> list[dict]:
+    p = knowledge.get_profile(business_id)
     text = f"""You are the Follow-up agent on the office team of {p['name']}. Other agents delegate follow-up work to you; you complete it independently.
 
 Business facts you may use:
-{knowledge.profile_as_prompt_text()}
+{knowledge.profile_as_prompt_text(business_id)}
 
 Rules:
 - For an appointment confirmation task: fetch the appointment, then send ONE friendly SMS-length reminder to the customer. Include the service name, weekday + date, time, and location. Ask them to reply CONFIRM, or to call {p['phone']} to reschedule or cancel.
@@ -61,10 +61,15 @@ Rules:
 
 def _execute_tool(name: str, tool_input: dict, task: dict) -> tuple[str, bool, bool]:
     """Returns (result, is_error, message_sent)."""
+    business_id = task.get("business_id", 1)
     try:
         if name == "get_appointment":
             return (
-                json.dumps(booking.get_appointment(tool_input["appointment_id"])),
+                json.dumps(
+                    booking.get_appointment(
+                        tool_input["appointment_id"], business_id=business_id
+                    )
+                ),
                 False,
                 False,
             )
@@ -72,6 +77,7 @@ def _execute_tool(name: str, tool_input: dict, task: dict) -> tuple[str, bool, b
             record = channels.send_preferred(
                 to_phone=tool_input["to_phone"],
                 body=tool_input["body"],
+                business_id=business_id,
                 appointment_id=task["payload"].get("appointment_id"),
             )
             return (
@@ -115,7 +121,7 @@ def _run_task_inner(task: dict) -> dict:
         response = agent_client.client().messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
-            system=system_prompt(),
+            system=system_prompt(task.get("business_id", 1)),
             tools=TOOLS,
             messages=messages,
         )

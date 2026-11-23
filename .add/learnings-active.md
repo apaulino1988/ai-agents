@@ -1,4 +1,4 @@
-# Active Learnings (14 of 15)
+# Active Learnings (13 of 16)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
@@ -29,13 +29,14 @@
   A killed PID (5664) remained in netstat as LISTENING on 127.0.0.1:8000 with no live process. New binds fail with WinError 10048. Fastest fix: use another port; a reboot clears the zombie entry.
 - **[medium]** gh OAuth needs 'workflow' scope to push CI files (L-006, 2026-11-20)
   A default `gh auth login` token lacks the workflow scope; pushing .github/workflows/*.yml is rejected by GitHub. Fix: `gh auth refresh -h github.com -s workflow` (device-code flow).
-- **[low]** ADD 0.11.0 plugin cache ships without scripts/check-test-count.py (L-009, 2026-11-21)
-  The tdd-cycle skill's RED/GREEN snapshot command points at {plugin}/../../scripts/check-test-count.py, which does not exist in the installed plugin cache. Workaround: manual snapshot JSON from `pytest --collect-only -q` (functions list + count) at .add/cycles/cycle-N/, compared by hand at verify Gate 3.5. Report upstream to MountainUnicorn/add.
-- **[low]** FastAPI form webhooks need python-multipart (L-007, 2026-11-21)
-  Twilio posts form-encoded bodies; FastAPI/Starlette form parsing requires the python-multipart package or every webhook request 500s. It is easy to miss locally because nothing imports it directly. Fix: add python-multipart to requirements whenever a route reads request.form().
+### technique
+- **[low]** Twilio Senders API messaging_limit reveals Meta verification progress without the console (L-016, 2026-11-22)
+  GET https://messaging.twilio.com/v2/Channels/Senders?Channel=whatsapp (basic auth) shows each WhatsApp sender's status, quality_rating, and messaging_limit. While Meta business verification was pending (err 63051), messaging_limit read 'Unavailable'; once Meta granted capacity it reads a tier like '250 Customers/24hr' and quality_rating goes HIGH. Cheap read-only check for verification progress; c… [truncated — full entry in learnings.json]
 
-## Index (1 more — title only, read JSON for full detail)
+## Index (3 more — title only, read JSON for full detail)
 
+- [low] L-009 technical: ADD 0.11.0 plugin cache ships without scripts/check-test-count.py (2026-11-21)
+- [low] L-007 technical: FastAPI form webhooks need python-multipart (2026-11-21)
 - [low] L-003 technical: Machine Python is 3.14.6, not configured 3.12 (2026-11-20)
 
 ---

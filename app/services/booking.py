@@ -1,16 +1,30 @@
 """Appointment booking: availability, book, cancel, reschedule.
 
 Single-provider calendar on a 30-minute slot grid. Plain Python service layer
-(no agent dependencies) so future agents can reuse it.
+(no agent dependencies) so future agents can reuse it. Every operation is
+tenant-scoped via `business_id` (default 1 = the migrated original business).
 """
 
+from contextlib import contextmanager
 from datetime import date as date_cls
 from datetime import datetime, timedelta
 
 from app import db
 from app.services import calendar, knowledge
+from app.tenant import current_business_id
 
 SLOT_MINUTES = 30
+
+
+@contextmanager
+def _tenant(business_id: int):
+    """Calendar calls read the tenant from context (keeps their public
+    single-tenant call shape); booking bridges its explicit business_id in."""
+    token = current_business_id.set(business_id)
+    try:
+        yield
+    finally:
+        current_business_id.reset(token)
 
 
 class BookingError(Exception):
@@ -31,11 +45,11 @@ def _parse_time(value: str) -> datetime:
         raise BookingError(f"Invalid time '{value}', expected HH:MM.") from exc
 
 
-def _booked_intervals(conn, date: str) -> list[tuple[datetime, datetime]]:
+def _booked_intervals(conn, date: str, business_id: int) -> list[tuple[datetime, datetime]]:
     rows = conn.execute(
         "SELECT time, duration_minutes FROM appointments"
-        " WHERE date = ? AND status = 'booked'",
-        (date,),
+        " WHERE date = ? AND status = 'booked' AND business_id = ?",
+        (date, business_id),
     ).fetchall()
     intervals = []
     for row in rows:
@@ -44,13 +58,18 @@ def _booked_intervals(conn, date: str) -> list[tuple[datetime, datetime]]:
     return intervals
 
 
-def check_availability(date: str, service_id: str, db_path: str | None = None) -> list[str]:
+def check_availability(
+    date: str,
+    service_id: str,
+    db_path: str | None = None,
+    business_id: int = 1,
+) -> list[str]:
     """Open start times (HH:MM) for a service on a date."""
-    service = knowledge.get_service(service_id)
+    service = knowledge.get_service(service_id, business_id, db_path)
     if not service:
         raise BookingError(f"Unknown service '{service_id}'.")
     day = _parse_date(date)
-    hours = knowledge.hours_for_day(day.strftime("%A"))
+    hours = knowledge.hours_for_day(day.strftime("%A"), business_id, db_path)
     if not hours:
         return []
 
@@ -58,9 +77,10 @@ def check_availability(date: str, service_id: str, db_path: str | None = None) -
     duration = timedelta(minutes=service["duration_minutes"])
 
     with db.connect(db_path) as conn:
-        booked = _booked_intervals(conn, date)
+        booked = _booked_intervals(conn, date, business_id)
     # The owner's real calendar blocks slots too (fails open to []).
-    booked += calendar.busy_intervals(date)
+    with _tenant(business_id):
+        booked += calendar.busy_intervals(date)
 
     slots = []
     cursor = open_t
@@ -79,13 +99,14 @@ def book_appointment(
     customer_name: str,
     customer_phone: str,
     db_path: str | None = None,
+    business_id: int = 1,
 ) -> dict:
-    service = knowledge.get_service(service_id)
+    service = knowledge.get_service(service_id, business_id, db_path)
     if not service:
         raise BookingError(f"Unknown service '{service_id}'.")
     if not customer_name.strip() or not customer_phone.strip():
         raise BookingError("Customer name and phone are required.")
-    if time not in check_availability(date, service_id, db_path):
+    if time not in check_availability(date, service_id, db_path, business_id):
         raise BookingError(
             f"{time} on {date} is not available for {service['name']}."
         )
@@ -93,9 +114,11 @@ def book_appointment(
     with db.connect(db_path) as conn:
         cur = conn.execute(
             "INSERT INTO appointments"
-            " (service_id, date, time, duration_minutes, customer_name, customer_phone)"
-            " VALUES (?, ?, ?, ?, ?, ?)",
+            " (business_id, service_id, date, time, duration_minutes,"
+            "  customer_name, customer_phone)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
             (
+                business_id,
                 service_id,
                 date,
                 time,
@@ -107,8 +130,9 @@ def book_appointment(
         conn.commit()
         appointment_id = cur.lastrowid
 
-    appt = get_appointment(appointment_id, db_path)
-    event_id = calendar.create_event(appt)  # None when disabled or push failed
+    appt = get_appointment(appointment_id, db_path, business_id)
+    with _tenant(business_id):
+        event_id = calendar.create_event(appt)  # None when disabled/failed
     if event_id:
         with db.connect(db_path) as conn:
             conn.execute(
@@ -116,33 +140,40 @@ def book_appointment(
                 (event_id, appointment_id),
             )
             conn.commit()
-        appt = get_appointment(appointment_id, db_path)
+        appt = get_appointment(appointment_id, db_path, business_id)
     return appt
 
 
-def get_appointment(appointment_id: int, db_path: str | None = None) -> dict:
+def get_appointment(
+    appointment_id: int, db_path: str | None = None, business_id: int = 1
+) -> dict:
     with db.connect(db_path) as conn:
         row = conn.execute(
-            "SELECT * FROM appointments WHERE id = ?", (appointment_id,)
+            "SELECT * FROM appointments WHERE id = ? AND business_id = ?",
+            (appointment_id, business_id),
         ).fetchone()
     if not row:
         raise BookingError(f"No appointment with id {appointment_id}.")
     return dict(row)
 
 
-def find_appointments(customer_phone: str, db_path: str | None = None) -> list[dict]:
+def find_appointments(
+    customer_phone: str, db_path: str | None = None, business_id: int = 1
+) -> list[dict]:
     with db.connect(db_path) as conn:
         rows = conn.execute(
             "SELECT * FROM appointments"
-            " WHERE customer_phone = ? AND status = 'booked'"
+            " WHERE customer_phone = ? AND status = 'booked' AND business_id = ?"
             " ORDER BY date, time",
-            (customer_phone.strip(),),
+            (customer_phone.strip(), business_id),
         ).fetchall()
     return [dict(r) for r in rows]
 
 
-def cancel_appointment(appointment_id: int, db_path: str | None = None) -> dict:
-    appt = get_appointment(appointment_id, db_path)
+def cancel_appointment(
+    appointment_id: int, db_path: str | None = None, business_id: int = 1
+) -> dict:
+    appt = get_appointment(appointment_id, db_path, business_id)
     if appt["status"] != "booked":
         raise BookingError(f"Appointment {appointment_id} is already cancelled.")
     with db.connect(db_path) as conn:
@@ -152,12 +183,15 @@ def cancel_appointment(appointment_id: int, db_path: str | None = None) -> dict:
         )
         conn.commit()
     if appt.get("calendar_event_id"):
-        calendar.delete_event(appt["calendar_event_id"])
-    return get_appointment(appointment_id, db_path)
+        with _tenant(business_id):
+            calendar.delete_event(appt["calendar_event_id"])
+    return get_appointment(appointment_id, db_path, business_id)
 
 
-def confirm_appointment(appointment_id: int, db_path: str | None = None) -> dict:
-    appt = get_appointment(appointment_id, db_path)
+def confirm_appointment(
+    appointment_id: int, db_path: str | None = None, business_id: int = 1
+) -> dict:
+    appt = get_appointment(appointment_id, db_path, business_id)
     if appt["status"] != "booked":
         raise BookingError(f"Appointment {appointment_id} is cancelled; cannot confirm.")
     with db.connect(db_path) as conn:
@@ -166,13 +200,17 @@ def confirm_appointment(appointment_id: int, db_path: str | None = None) -> dict
             (appointment_id,),
         )
         conn.commit()
-    return get_appointment(appointment_id, db_path)
+    return get_appointment(appointment_id, db_path, business_id)
 
 
 def reschedule_appointment(
-    appointment_id: int, new_date: str, new_time: str, db_path: str | None = None
+    appointment_id: int,
+    new_date: str,
+    new_time: str,
+    db_path: str | None = None,
+    business_id: int = 1,
 ) -> dict:
-    appt = get_appointment(appointment_id, db_path)
+    appt = get_appointment(appointment_id, db_path, business_id)
     if appt["status"] != "booked":
         raise BookingError(f"Appointment {appointment_id} is cancelled; book a new one.")
     new_appt = book_appointment(
@@ -182,6 +220,7 @@ def reschedule_appointment(
         appt["customer_name"],
         appt["customer_phone"],
         db_path,
+        business_id,
     )
-    cancel_appointment(appointment_id, db_path)
+    cancel_appointment(appointment_id, db_path, business_id)
     return new_appt

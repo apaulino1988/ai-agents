@@ -23,7 +23,7 @@
     {
       "id": "L-002",
       "title": "Service layer separation enables agent reuse",
-      "body": "booking/knowledge as plain Python services (no agent imports) meant the Follow-up agent reused them with zero changes \u00e2\u20ac\u201d validating the design constraint set at init. Keep all business capability in app/services/, agents only orchestrate.",
+      "body": "booking/knowledge as plain Python services (no agent imports) meant the Follow-up agent reused them with zero changes â€” validating the design constraint set at init. Keep all business capability in app/services/, agents only orchestrate.",
       "scope": "project",
       "stack": [
         "python",
@@ -54,7 +54,7 @@
     {
       "id": "L-004",
       "title": "Secrets go only in gitignored .env, never .env.example",
-      "body": "User pasted a real API key into the tracked .env.example \u00e2\u20ac\u201d would have leaked to GitHub on next push. Moved to .env and restored the placeholder before any commit. Always double-check which env file receives a secret; .env.example is public documentation.",
+      "body": "User pasted a real API key into the tracked .env.example â€” would have leaked to GitHub on next push. Moved to .env and restored the placeholder before any commit. Always double-check which env file receives a secret; .env.example is public documentation.",
       "scope": "workstation",
       "stack": [
         "git",
@@ -118,7 +118,7 @@
     {
       "id": "L-008",
       "title": "Bare pytest and python -m pytest resolve imports differently",
-      "body": "`python -m pytest` adds the cwd to sys.path; bare `pytest` does not. A repo with no root conftest.py/pyproject can pass locally and fail collection in CI with ModuleNotFoundError. Fix: an empty root conftest.py (or pythonpath in pyproject). Also: verify CI is actually green after scaffolding it \u2014 this repo's CI had failed on every run since creation without being noticed.",
+      "body": "`python -m pytest` adds the cwd to sys.path; bare `pytest` does not. A repo with no root conftest.py/pyproject can pass locally and fail collection in CI with ModuleNotFoundError. Fix: an empty root conftest.py (or pythonpath in pyproject). Also: verify CI is actually green after scaffolding it — this repo's CI had failed on every run since creation without being noticed.",
       "scope": "workstation",
       "stack": [
         "pytest",
@@ -150,7 +150,7 @@
     {
       "id": "L-010",
       "title": "zoneinfo needs the tzdata package on Windows",
-      "body": "Python's zoneinfo has no IANA database on Windows (and slim Docker images): ZoneInfo('UTC') raises 'No time zone found with key UTC'. Any code touching timezones must ship the tzdata pip package. Caught here only because a test exercised the real code path \u2014 fail-open error handling had masked it into an empty result.",
+      "body": "Python's zoneinfo has no IANA database on Windows (and slim Docker images): ZoneInfo('UTC') raises 'No time zone found with key UTC'. Any code touching timezones must ship the tzdata pip package. Caught here only because a test exercised the real code path — fail-open error handling had masked it into an empty result.",
       "scope": "workstation",
       "stack": [
         "python",
@@ -168,7 +168,10 @@
       "title": "US SMS requires A2P 10DLC registration — even on Twilio trial",
       "body": "US carriers reject SMS from unregistered local 10DLC numbers with err 30034 (inbound unaffected). No API bypass; A2P brand/campaign registration (or verified toll-free) takes business details and days. Kick it off well before any live SMS milestone — it gated the M3 smoke test. Registered at production-deploy time (M4).",
       "scope": "workstation",
-      "stack": ["twilio", "sms"],
+      "stack": [
+        "twilio",
+        "sms"
+      ],
       "category": "technical",
       "severity": "high",
       "source": "ai-agents",
@@ -181,7 +184,11 @@
       "title": "Twilio WhatsApp: skip the sandbox, register a real sender",
       "body": "The sandbox can be OFFLINE account-wide (every join fails with an opaque error; no API to inspect or fix). The reliable path: Meta embedded signup registers your Twilio number as a real sender (SMS code to the number), webhook set via Senders API v2 (messaging.twilio.com/v2/Channels/Senders/{sid}). Gotchas: new WABA stays locked (err 63051) until Meta business verification (~3h observed); sends during webhook update (ONLINE:UPDATING) fail with 63007 — wait ~1 min after changes.",
       "scope": "workstation",
-      "stack": ["twilio", "whatsapp", "meta"],
+      "stack": [
+        "twilio",
+        "whatsapp",
+        "meta"
+      ],
       "category": "technical",
       "severity": "high",
       "source": "ai-agents",
@@ -194,7 +201,10 @@
       "title": "Cloudflare quick tunnels die permanently and rotate URLs",
       "body": "Cloudflare's edge drops quick tunnels after a few hours ('Unauthorized: Tunnel not found'); cloudflared retries forever but can never re-register — restart required, which issues a NEW random URL. Recovery routine: restart tunnel, re-point every webhook via API, expect minutes of DNS propagation (Twilio reports err 11210 meanwhile; its resolver caches the negative answer). Run a log watcher on the death signature. For anything beyond a throwaway session use a named tunnel or ngrok with a reserved domain.",
       "scope": "workstation",
-      "stack": ["cloudflared", "webhooks"],
+      "stack": [
+        "cloudflared",
+        "webhooks"
+      ],
       "category": "technical",
       "severity": "medium",
       "source": "ai-agents",
@@ -207,7 +217,11 @@
       "title": "Rename cloud credential downloads to the gitignored name immediately",
       "body": "Google SA keys download as {project}-{hash}.json, which .gitignore patterns written for data/google-sa.json or *-sa.json do NOT match — the key sat trackable in data/ until renamed. Same session: real Twilio creds were pasted into a tracked doc (docs/smoke-test.md) and scrubbed pre-commit. Pattern (2nd+3rd occurrence after WL-001): secrets drift into tracked files during setup flows; always route credentials straight to their gitignored destination and verify with git status.",
       "scope": "workstation",
-      "stack": ["git", "gcp", "secrets"],
+      "stack": [
+        "git",
+        "gcp",
+        "secrets"
+      ],
       "category": "anti-pattern",
       "severity": "high",
       "source": "ai-agents",
@@ -220,13 +234,33 @@
       "title": "A populated .env leaks into unit tests via load_dotenv at collection",
       "body": "pytest imports every test module at collection, so any module importing the app entrypoint runs load_dotenv() before the first test executes — real credentials then enable live integration paths suite-wide (7 booking tests silently hit the real Google Calendar). Invisible until the day .env gains real creds; tests pass in isolation, fail in the full run. Fix: an autouse fixture that delenvs all integration vars; tests opt in with monkeypatch.setenv.",
       "scope": "workstation",
-      "stack": ["pytest", "dotenv", "python"],
+      "stack": [
+        "pytest",
+        "dotenv",
+        "python"
+      ],
       "category": "anti-pattern",
       "severity": "medium",
       "source": "ai-agents",
       "date": "2026-11-22",
       "classified_by": "agent",
       "checkpoint_type": "deploy"
+    },
+    {
+      "id": "L-016",
+      "title": "Twilio Senders API messaging_limit reveals Meta verification progress without the console",
+      "body": "GET https://messaging.twilio.com/v2/Channels/Senders?Channel=whatsapp (basic auth) shows each WhatsApp sender's status, quality_rating, and messaging_limit. While Meta business verification was pending (err 63051), messaging_limit read 'Unavailable'; once Meta granted capacity it reads a tier like '250 Customers/24hr' and quality_rating goes HIGH. Cheap read-only check for verification progress; confirm with an actual delivery. Note the endpoint requires the Channel query param or it 400s.",
+      "scope": "project",
+      "stack": [
+        "twilio",
+        "whatsapp"
+      ],
+      "category": "technique",
+      "severity": "low",
+      "source": "ai-agents",
+      "date": "2026-11-22",
+      "classified_by": "agent",
+      "checkpoint_type": "cycle-plan"
     }
   ]
 }

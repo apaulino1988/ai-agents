@@ -14,12 +14,14 @@ def record(
     appointment_id: int | None = None,
     channel: str = "sms-outbox",
     db_path: str | None = None,
+    business_id: int = 1,
 ) -> dict:
     with db.connect(db_path) as conn:
         cur = conn.execute(
-            "INSERT INTO outbox (to_phone, customer_name, body, channel, appointment_id)"
-            " VALUES (?, ?, ?, ?, ?)",
-            (to_phone, customer_name, body, channel, appointment_id),
+            "INSERT INTO outbox"
+            " (business_id, to_phone, customer_name, body, channel, appointment_id)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (business_id, to_phone, customer_name, body, channel, appointment_id),
         )
         conn.commit()
         row = conn.execute(

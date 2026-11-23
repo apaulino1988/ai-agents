@@ -5,6 +5,7 @@ import datetime
 import anthropic
 
 from app.services import knowledge
+from app.tenant import current_business_id
 from app.tools import TOOLS, execute_tool
 
 MODEL = "claude-opus-5"
@@ -21,11 +22,11 @@ def client() -> anthropic.Anthropic:
     return _client
 
 
-def system_prompt() -> list[dict]:
+def system_prompt(business_id: int = 1) -> list[dict]:
     """Stable system prompt with the business profile, cached across requests."""
     text = f"""You are the friendly, professional AI Secretary for the business below. You handle the front office over web chat: answering questions about services, prices, and hours, giving quotes, and booking, rescheduling, or cancelling appointments.
 
-{knowledge.profile_as_prompt_text()}
+{knowledge.profile_as_prompt_text(business_id)}
 
 Rules:
 - Answer only from the business profile above and your tools. Never invent services, prices, availability, or policies. If a price "may vary", say so.
@@ -51,6 +52,7 @@ def run_turn(messages: list[dict], user_message: str) -> tuple[str, list[dict]]:
     Returns (reply_text, updated_messages). `messages` is the prior history in
     Messages API format; the caller persists the returned list.
     """
+    business_id = current_business_id.get()
     messages = list(messages)
     messages.append(
         {"role": "user", "content": f"{_date_context()}\n{user_message}"}
@@ -60,7 +62,7 @@ def run_turn(messages: list[dict], user_message: str) -> tuple[str, list[dict]]:
         response = client().messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
-            system=system_prompt(),
+            system=system_prompt(business_id),
             tools=TOOLS,
             messages=messages,
         )
@@ -99,7 +101,7 @@ def run_turn(messages: list[dict], user_message: str) -> tuple[str, list[dict]]:
     return (
         (
             "Sorry, I ran into trouble completing that. Please call us at "
-            f"{knowledge.get_profile()['phone']} and we'll sort it out."
+            f"{knowledge.get_profile(business_id)['phone']} and we'll sort it out."
         ),
         messages,
     )

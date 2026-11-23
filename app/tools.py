@@ -3,6 +3,7 @@
 import json
 
 from app.services import booking, tasks
+from app.tenant import current_business_id
 
 TOOLS = [
     {
@@ -115,11 +116,13 @@ TOOLS = [
 
 
 def execute_tool(name: str, tool_input: dict) -> tuple[str, bool]:
-    """Run a tool; returns (result_json, is_error)."""
+    """Run a tool for the current tenant; returns (result_json, is_error)."""
+    business_id = current_business_id.get()
     try:
         if name == "check_availability":
             result = booking.check_availability(
-                tool_input["date"], tool_input["service_id"]
+                tool_input["date"], tool_input["service_id"],
+                business_id=business_id,
             )
         elif name == "book_appointment":
             result = booking.book_appointment(
@@ -128,20 +131,30 @@ def execute_tool(name: str, tool_input: dict) -> tuple[str, bool]:
                 tool_input["time"],
                 tool_input["customer_name"],
                 tool_input["customer_phone"],
+                business_id=business_id,
             )
         elif name == "find_appointments":
-            result = booking.find_appointments(tool_input["customer_phone"])
+            result = booking.find_appointments(
+                tool_input["customer_phone"], business_id=business_id
+            )
         elif name == "schedule_followup":
-            result = tasks.schedule_confirmation(tool_input["appointment_id"])
+            result = tasks.schedule_confirmation(
+                tool_input["appointment_id"], business_id=business_id
+            )
         elif name == "cancel_appointment":
-            result = booking.cancel_appointment(tool_input["appointment_id"])
+            result = booking.cancel_appointment(
+                tool_input["appointment_id"], business_id=business_id
+            )
         elif name == "confirm_appointment":
-            result = booking.confirm_appointment(tool_input["appointment_id"])
+            result = booking.confirm_appointment(
+                tool_input["appointment_id"], business_id=business_id
+            )
         elif name == "reschedule_appointment":
             result = booking.reschedule_appointment(
                 tool_input["appointment_id"],
                 tool_input["new_date"],
                 tool_input["new_time"],
+                business_id=business_id,
             )
         else:
             return f"Unknown tool: {name}", True

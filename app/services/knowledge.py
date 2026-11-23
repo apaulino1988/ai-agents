@@ -1,47 +1,55 @@
-"""Business knowledge: the configured profile the Secretary answers from.
+"""Business knowledge: the per-tenant profile the agents answer from.
 
-Plain Python, independent of the agent, so future agents (M2 Follow-up) can
-reuse it.
+Profiles live in the `businesses` table (multi-tenant AC-006). The default
+tenant (id=1) is seeded from `data/business.json` on first connect — that
+file is a seed source only, never read at answer time. Plain Python,
+independent of the agent, so every agent role shares it.
 """
 
 import json
 import os
-from functools import lru_cache
 from pathlib import Path
+
+from app import db
 
 DEFAULT_BUSINESS_FILE = Path(__file__).resolve().parents[2] / "data" / "business.json"
 
 
 def business_file() -> Path:
+    """Seed source for the default tenant (see db._seed_default_business)."""
     return Path(os.environ.get("SECRETARY_BUSINESS_FILE", DEFAULT_BUSINESS_FILE))
 
 
-@lru_cache(maxsize=1)
-def _load(path: str) -> dict:
-    with open(path, encoding="utf-8") as f:
-        return json.load(f)
+def get_profile(business_id: int = 1, db_path: str | None = None) -> dict:
+    with db.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT profile FROM businesses WHERE id = ?", (business_id,)
+        ).fetchone()
+    if not row:
+        raise LookupError(f"No business with id {business_id}.")
+    return json.loads(row["profile"])
 
 
-def get_profile() -> dict:
-    return _load(str(business_file()))
-
-
-def get_service(service_id: str) -> dict | None:
-    for service in get_profile()["services"]:
+def get_service(
+    service_id: str, business_id: int = 1, db_path: str | None = None
+) -> dict | None:
+    for service in get_profile(business_id, db_path)["services"]:
         if service["id"] == service_id:
             return service
     return None
 
 
-def hours_for_day(day_name: str) -> tuple[str, str] | None:
+def hours_for_day(
+    day_name: str, business_id: int = 1, db_path: str | None = None
+) -> tuple[str, str] | None:
     """Opening hours for a weekday name ('monday'...), or None if closed."""
-    hours = get_profile()["hours"].get(day_name.lower())
+    hours = get_profile(business_id, db_path)["hours"].get(day_name.lower())
     return (hours[0], hours[1]) if hours else None
 
 
-def profile_as_prompt_text() -> str:
+def profile_as_prompt_text(business_id: int = 1, db_path: str | None = None) -> str:
     """Render the business profile for the agent's system prompt."""
-    p = get_profile()
+    p = get_profile(business_id, db_path)
     lines = [
         f"Business: {p['name']} — {p['tagline']}",
         p["description"],

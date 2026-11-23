@@ -22,6 +22,8 @@ from zoneinfo import ZoneInfo
 import httpx
 import jwt
 
+from app.tenant import current_business_id
+
 logger = logging.getLogger(__name__)
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -36,30 +38,69 @@ class CalendarError(Exception):
     """Internal calendar failure; callers log it, never surface to customers."""
 
 
-def config() -> dict | None:
+def _business_row(business_id: int) -> dict | None:
+    from app.services import tenants  # lazy: avoid cycle at import time
+
+    return tenants.get_business(business_id)
+
+
+def _resolve(business_id: int | None) -> int:
+    """Explicit business_id wins; otherwise the request's tenant context.
+    Keeps public call shapes single-tenant-compatible (callers may omit it)."""
+    if business_id is not None:
+        return business_id
+    return current_business_id.get()
+
+
+def config(business_id: int | None = None) -> dict | None:
+    """Per-tenant calendar config. One platform service account is shared;
+    the calendar id comes from the business row. For the default tenant only,
+    the original GOOGLE_CALENDAR_ID env var still works as a fallback —
+    other tenants never inherit it (isolation)."""
+    business_id = _resolve(business_id)
     sa_file = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE")
-    calendar_id = os.environ.get("GOOGLE_CALENDAR_ID")
-    if sa_file and calendar_id:
-        return {"sa_file": sa_file, "calendar_id": calendar_id}
-    return None
+    if not sa_file:
+        return None
+    business = _business_row(business_id) or {}
+    calendar_id = business.get("calendar_id")
+    if not calendar_id and business_id == 1:
+        calendar_id = os.environ.get("GOOGLE_CALENDAR_ID")
+    if not calendar_id:
+        return None
+    return {"sa_file": sa_file, "calendar_id": calendar_id}
 
 
-def enabled() -> bool:
-    return config() is not None
+def enabled(business_id: int | None = None) -> bool:
+    return config(business_id) is not None
 
 
-def business_tz() -> ZoneInfo:
-    return ZoneInfo(os.environ.get("BUSINESS_TIMEZONE", "UTC"))
+def _tz_name(business_id: int | None = None) -> str:
+    business_id = _resolve(business_id)
+    env_tz = os.environ.get("BUSINESS_TIMEZONE")
+    if business_id == 1 and env_tz:
+        return env_tz
+    business = _business_row(business_id)
+    if business and business.get("timezone"):
+        return business["timezone"]
+    return env_tz or "UTC"
+
+
+def business_tz(business_id: int | None = None) -> ZoneInfo:
+    return ZoneInfo(_tz_name(business_id))
 
 
 def _access_token() -> str:
-    """Service-account JWT grant → access token, cached until expiry."""
+    """Service-account JWT grant → access token, cached until expiry.
+
+    The platform shares one service account across tenants, so the token is
+    tenant-independent (only sa_file matters here)."""
     if _token_cache.get("token") and time.time() < _token_cache.get("expires_at", 0):
         return _token_cache["token"]
 
-    cfg = config()
-    if not cfg:
+    sa_file = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE")
+    if not sa_file:
         raise CalendarError("Calendar not configured.")
+    cfg = {"sa_file": sa_file}
     with open(cfg["sa_file"], encoding="utf-8") as f:
         sa = json.load(f)
 
@@ -94,29 +135,29 @@ def _headers() -> dict:
     return {"Authorization": f"Bearer {_access_token()}"}
 
 
-def _event_times(appointment: dict) -> tuple[dict, dict]:
+def _event_times(appointment: dict, tz: str) -> tuple[dict, dict]:
     start = datetime.strptime(
         f"{appointment['date']} {appointment['time']}", "%Y-%m-%d %H:%M"
     )
     end = start + timedelta(minutes=appointment["duration_minutes"])
-    tz = os.environ.get("BUSINESS_TIMEZONE", "UTC")
     return (
         {"dateTime": start.strftime("%Y-%m-%dT%H:%M:%S"), "timeZone": tz},
         {"dateTime": end.strftime("%Y-%m-%dT%H:%M:%S"), "timeZone": tz},
     )
 
 
-def create_event(appointment: dict) -> str | None:
+def create_event(appointment: dict, business_id: int | None = None) -> str | None:
     """Push a booking to the calendar. Returns the event id, or None on any failure."""
-    cfg = config()
+    business_id = _resolve(business_id)
+    cfg = config(business_id)
     if not cfg:
         return None
     try:
         from app.services import knowledge
 
-        service = knowledge.get_service(appointment["service_id"]) or {}
+        service = knowledge.get_service(appointment["service_id"], business_id) or {}
         service_name = service.get("name", appointment["service_id"].title())
-        start, end = _event_times(appointment)
+        start, end = _event_times(appointment, _tz_name(business_id))
         response = httpx.post(
             f"{CALENDAR_API}/calendars/"
             f"{urllib.parse.quote(cfg['calendar_id'])}/events",
@@ -141,9 +182,9 @@ def create_event(appointment: dict) -> str | None:
         return None
 
 
-def delete_event(event_id: str) -> None:
+def delete_event(event_id: str, business_id: int | None = None) -> None:
     """Best-effort event removal (cancellations, reschedules)."""
-    cfg = config()
+    cfg = config(business_id)
     if not cfg or not event_id:
         return
     try:
@@ -159,14 +200,16 @@ def delete_event(event_id: str) -> None:
         logger.warning("Calendar delete failed for event %s: %s", event_id, exc)
 
 
-def busy_intervals(date: str) -> list[tuple[datetime, datetime]]:
+def busy_intervals(
+    date: str, business_id: int | None = None
+) -> list[tuple[datetime, datetime]]:
     """Busy windows on `date` in time-of-day space (same space as booking's
     `_parse_time`: naive datetimes on 1900-01-01). Fails open to []."""
-    cfg = config()
+    cfg = config(business_id)
     if not cfg:
         return []
     try:
-        tz = business_tz()
+        tz = business_tz(business_id)
         day_start = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=tz)
         day_end = day_start + timedelta(days=1)
         response = httpx.post(

@@ -21,12 +21,14 @@ def create_task(
     payload: dict,
     due_at: str | None = None,
     db_path: str | None = None,
+    business_id: int = 1,
 ) -> dict:
     with db.connect(db_path) as conn:
         cur = conn.execute(
-            "INSERT INTO agent_tasks (from_agent, to_agent, task_type, payload, due_at)"
-            " VALUES (?, ?, ?, ?, ?)",
-            (from_agent, to_agent, task_type, json.dumps(payload), due_at),
+            "INSERT INTO agent_tasks"
+            " (business_id, from_agent, to_agent, task_type, payload, due_at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (business_id, from_agent, to_agent, task_type, json.dumps(payload), due_at),
         )
         conn.commit()
         return get_task(cur.lastrowid, db_path)
@@ -91,12 +93,14 @@ def _set_status(task_id: int, status: str, result: str, db_path: str | None) -> 
     return get_task(task_id, db_path)
 
 
-def schedule_confirmation(appointment_id: int, db_path: str | None = None) -> dict:
+def schedule_confirmation(
+    appointment_id: int, db_path: str | None = None, business_id: int = 1
+) -> dict:
     """Secretary → Follow-up handoff: confirmation reminder for an appointment.
 
     Due 24h before the appointment; immediately if that moment already passed.
     """
-    appt = booking.get_appointment(appointment_id, db_path)
+    appt = booking.get_appointment(appointment_id, db_path, business_id)
     if appt["status"] != "booked":
         raise booking.BookingError(
             f"Appointment {appointment_id} is not booked; nothing to confirm."
@@ -111,4 +115,5 @@ def schedule_confirmation(appointment_id: int, db_path: str | None = None) -> di
         payload={"appointment_id": appointment_id},
         due_at=due.isoformat(timespec="seconds"),
         db_path=db_path,
+        business_id=business_id,
     )
