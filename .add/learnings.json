@@ -261,6 +261,38 @@
       "date": "2026-11-22",
       "classified_by": "agent",
       "checkpoint_type": "cycle-plan"
+    },
+    {
+      "id": "L-017",
+      "title": "ContextVar bridges tenancy into fixed-signature agent entry points",
+      "body": "Threading business_id through every call would have broken monkeypatched test doubles (lambda history, msg / lambda date) on agent.run_turn and calendar hooks. Pattern that kept all 59 existing tests byte-identical: request layer resolves the tenant once and sets a ContextVar; fixed-signature layers (agent loop, calendar provider) read it; the service layer still takes explicit business_id=1 params, and booking bridges explicit->context around calendar calls with a small contextmanager. Isolation stays testable, hidden state stays confined to the two boundary layers.",
+      "scope": "workstation",
+      "stack": [
+        "python",
+        "fastapi",
+        "pytest"
+      ],
+      "category": "technique",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-22",
+      "classified_by": "agent",
+      "checkpoint_type": "tdd-cycle"
+    },
+    {
+      "id": "L-018",
+      "title": "Default-tenant env fallback keeps a live deployment unchanged through a multi-tenant migration",
+      "body": "When adding tenancy to a running single-business app, let tenant id=1 (the migrated original) keep honoring the original env vars (TWILIO_FROM_NUMBER, GOOGLE_CALENDAR_ID, BUSINESS_TIMEZONE) as fallbacks, while other tenants read ONLY their row values. Live deployment and all env-monkeypatching tests keep working with zero config change, and isolation holds: a tenant without its own number/calendar gets record-only/skip, never the platform default (cross-tenant leak).",
+      "scope": "universal",
+      "stack": [
+        "python"
+      ],
+      "category": "technique",
+      "severity": "medium",
+      "source": "ai-agents",
+      "date": "2026-11-22",
+      "classified_by": "agent",
+      "checkpoint_type": "tdd-cycle"
     }
   ]
 }

@@ -2,9 +2,9 @@
 
 **Milestone:** M4 — onboarding
 **Maturity:** alpha
-**Status:** PLANNED
-**Started:** TBD
-**Completed:** TBD
+**Status:** EXECUTED (pending Andres's review sign-off for --complete)
+**Started:** 2026-11-22
+**Completed:** 2026-11-22 (implementation + verify; same session as planning)
 **Duration Budget:** ~3 days (owner mostly away — conservative scope, high autonomy)
 
 ## Work Items

@@ -1,4 +1,4 @@
-# Active Learnings (13 of 16)
+# Active Learnings (13 of 18)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
@@ -27,14 +27,16 @@
   `python -m pytest` adds the cwd to sys.path; bare `pytest` does not. A repo with no root conftest.py/pyproject can pass locally and fail collection in CI with ModuleNotFoundError. Fix: an empty root conftest.py (or pythonpath in pyproject). Also: verify CI is actually green after scaffolding it — this repo's CI had failed on every run since creation without being noticed.
 - **[medium]** Windows zombie socket can hold a port after process death (L-005, 2026-11-21)
   A killed PID (5664) remained in netstat as LISTENING on 127.0.0.1:8000 with no live process. New binds fail with WinError 10048. Fastest fix: use another port; a reboot clears the zombie entry.
-- **[medium]** gh OAuth needs 'workflow' scope to push CI files (L-006, 2026-11-20)
-  A default `gh auth login` token lacks the workflow scope; pushing .github/workflows/*.yml is rejected by GitHub. Fix: `gh auth refresh -h github.com -s workflow` (device-code flow).
 ### technique
-- **[low]** Twilio Senders API messaging_limit reveals Meta verification progress without the console (L-016, 2026-11-22)
-  GET https://messaging.twilio.com/v2/Channels/Senders?Channel=whatsapp (basic auth) shows each WhatsApp sender's status, quality_rating, and messaging_limit. While Meta business verification was pending (err 63051), messaging_limit read 'Unavailable'; once Meta granted capacity it reads a tier like '250 Customers/24hr' and quality_rating goes HIGH. Cheap read-only check for verification progress; c… [truncated — full entry in learnings.json]
+- **[medium]** Default-tenant env fallback keeps a live deployment unchanged through a multi-tenant migration (L-018, 2026-11-22)
+  When adding tenancy to a running single-business app, let tenant id=1 (the migrated original) keep honoring the original env vars (TWILIO_FROM_NUMBER, GOOGLE_CALENDAR_ID, BUSINESS_TIMEZONE) as fallbacks, while other tenants read ONLY their row values. Live deployment and all env-monkeypatching tests keep working with zero config change, and isolation holds: a tenant without its own number/calendar… [truncated — full entry in learnings.json]
+- **[medium]** ContextVar bridges tenancy into fixed-signature agent entry points (L-017, 2026-11-22)
+  Threading business_id through every call would have broken monkeypatched test doubles (lambda history, msg / lambda date) on agent.run_turn and calendar hooks. Pattern that kept all 59 existing tests byte-identical: request layer resolves the tenant once and sets a ContextVar; fixed-signature layers (agent loop, calendar provider) read it; the service layer still takes explicit business_id=1 param… [truncated — full entry in learnings.json]
 
-## Index (3 more — title only, read JSON for full detail)
+## Index (5 more — title only, read JSON for full detail)
 
+- [medium] L-006 technical: gh OAuth needs 'workflow' scope to push CI files (2026-11-20)
+- [low] L-016 technique: Twilio Senders API messaging_limit reveals Meta verification progress without the console (2026-11-22)
 - [low] L-009 technical: ADD 0.11.0 plugin cache ships without scripts/check-test-count.py (2026-11-21)
 - [low] L-007 technical: FastAPI form webhooks need python-multipart (2026-11-21)
 - [low] L-003 technical: Machine Python is 3.14.6, not configured 3.12 (2026-11-20)
