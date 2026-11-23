@@ -33,8 +33,9 @@ ssh ubuntu@<ip> "chmod 600 /opt/ai-agents/.env && chmod +x /opt/ai-agents/restor
 6. **Migrating existing local data (optional):** back up first, then
    `scp secretary.db ubuntu@<ip>:/opt/ai-agents/data/` — it auto-migrates
    to multi-tenant schema on first boot.
-7. GHCR package is public (public repo) — no registry login needed on the
-   instance. First start: `cd /opt/ai-agents && docker compose -f docker-compose.prod.yml up -d`
+7. GHCR note: packages start **private** even on public repos. One-time:
+   github.com → your profile → Packages → `ai-agents` → Package settings →
+   Change visibility → Public. (Otherwise the instance needs a PAT login.) First start: `cd /opt/ai-agents && docker compose -f docker-compose.prod.yml up -d`
    (add `--profile backup` once LITESTREAM_* vars are set and the S3 bucket
    exists: S3 console → create bucket, IAM user with that bucket only).
 
