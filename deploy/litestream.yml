@@ -1,0 +1,9 @@
+# Continuous SQLite replication to S3 (spec: aws-deploy AC-006).
+# Bucket + creds come from .env (LITESTREAM_* vars). Restore: deploy/restore.sh
+dbs:
+  - path: /data/secretary.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: secretary
+        region: ${AWS_REGION}

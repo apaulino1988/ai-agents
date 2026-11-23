@@ -32,3 +32,29 @@ jobs:
           else
             echo "No tests yet — skipping (POC maturity)"
           fi
+
+  # Build + push the production image AFTER tests pass (spec: aws-deploy AC-005).
+  # Pushing an image never deploys anything — deploy/deploy.sh is manual.
+  image:
+    needs: backend
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/apaulino1988/ai-agents:latest
+            ghcr.io/apaulino1988/ai-agents:${{ github.sha }}

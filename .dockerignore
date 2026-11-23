@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.add
+.env*
+**/__pycache__
+*.db
+data/google-sa.json
+tests/
+docs/
+specs/
+deploy/
+site/
+secretary.db

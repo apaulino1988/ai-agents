@@ -1,9 +1,9 @@
 # Spec: aws-deploy (M4 — onboarding)
 
-**Version:** 0.1.0 (DRAFT — awaiting Andres's approval)
+**Version:** 0.2.0
 **Created:** 2026-11-23
 **PRD Reference:** docs/prd.md (M4: onboarding)
-**Status:** Draft
+**Status:** Approved (Andres, 2026-11-23 — Lightsail architecture confirmed)
 
 ## 1. Overview
 

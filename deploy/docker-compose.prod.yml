@@ -1,0 +1,45 @@
+# Production stack on the Lightsail instance (spec: aws-deploy AC-002/003/006).
+# Lives at /opt/ai-agents/ on the host next to .env (chmod 600) and Caddyfile.
+# Start:          docker compose -f docker-compose.prod.yml up -d
+# With backups:   docker compose -f docker-compose.prod.yml --profile backup up -d
+
+services:
+  app:
+    image: ghcr.io/apaulino1988/ai-agents:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SECRETARY_DB_PATH: /data/secretary.db
+      GOOGLE_SERVICE_ACCOUNT_FILE: /secrets/google-sa.json
+    volumes:
+      - ./data:/data
+      - ./secrets/google-sa.json:/secrets/google-sa.json:ro
+    expose:
+      - "8000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PROD_HOST: ${PROD_HOST:?set PROD_HOST in .env (e.g. api.paulinoaiagents.com)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  litestream:
+    image: litestream/litestream:latest
+    restart: unless-stopped
+    profiles: ["backup"]
+    command: replicate -config /etc/litestream.yml
+    env_file: .env # LITESTREAM_ACCESS_KEY_ID / LITESTREAM_SECRET_ACCESS_KEY
+    volumes:
+      - ./litestream.yml:/etc/litestream.yml:ro
+      - ./data:/data
+
+volumes:
+  caddy_data:
+  caddy_config:
