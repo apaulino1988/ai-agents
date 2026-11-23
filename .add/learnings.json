@@ -293,6 +293,23 @@
       "date": "2026-11-22",
       "classified_by": "agent",
       "checkpoint_type": "tdd-cycle"
+    },
+    {
+      "id": "L-019",
+      "title": "Cycle 3 complete: multi-tenant foundation planned-to-closed in one session",
+      "body": "Metrics: 1 feature (multi-tenant) NOT_SHAPED -> VERIFIED in ~1 session vs 3-day budget; 21 new tests (9 ACs), suite 59 -> 80, coverage 82% -> 85%, zero edits to existing test bodies, 2 CI-green pushes. What worked: AskUserQuestion batched the spec's 3 open decisions + approval into one prompt while the owner was briefly present, converting an 'away' cycle into same-day sign-off; the ContextVar bridge (L-017) and default-tenant env fallback (L-018) kept every legacy test and the live deployment intact. Harder: three existing calendar tests monkeypatch single-arg lambdas, which forced the context-resolution design on calendar's public functions; conftest autouse DB isolation was needed once profiles moved to the DB (tests must never touch secretary.db). For next cycle: reviewer step was informal self-review, fine at alpha but should become /add:reviewer or PR review as beta nears; a2p-registration has external wait times, start it before aws-deploy work.",
+      "scope": "project",
+      "stack": [
+        "python",
+        "fastapi",
+        "sqlite"
+      ],
+      "category": "process",
+      "severity": "low",
+      "source": "ai-agents",
+      "date": "2026-11-22",
+      "classified_by": "agent",
+      "checkpoint_type": "retro"
     }
   ]
 }

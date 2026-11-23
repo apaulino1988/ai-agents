@@ -2,9 +2,9 @@
 
 **Milestone:** M4 — onboarding
 **Maturity:** alpha
-**Status:** EXECUTED (pending Andres's review sign-off for --complete)
+**Status:** COMPLETE (closed 2026-11-22; Andres signed off via /add:cycle --complete)
 **Started:** 2026-11-22
-**Completed:** 2026-11-22 (implementation + verify; same session as planning)
+**Completed:** 2026-11-22 (planned, specced, implemented, verified and closed same day)
 **Duration Budget:** ~3 days (owner mostly away — conservative scope, high autonomy)
 
 ## Work Items
@@ -49,10 +49,10 @@ Single-threaded execution (alpha, wip_limit=1). Features advance sequentially.
   - All new code TDD (strict RED → GREEN, snapshots in .add/cycles/cycle-3/)
 
 ### Cycle Success Criteria
-- [ ] multi-tenant reaches IN_PROGRESS (spec approved, implementation underway or done)
-- [ ] All acceptance criteria verified by tests
-- [ ] Code review completed (self-review via /add:reviewer; Andres skim on return)
-- [ ] No regressions — 59/59 pre-existing tests still green, coverage ≥ 82%
+- [x] multi-tenant reaches IN_PROGRESS — exceeded: VERIFIED (implemented, all gates passed, fd502de, CI green)
+- [x] All acceptance criteria verified by tests (AC-001..AC-009, 21 tests, 80/80 suite)
+- [x] Code review completed — self-review in REFACTOR (caught the db.connect leak); Andres sign-off via --complete
+- [x] No regressions — 59/59 pre-existing tests green untouched, coverage 82% → 85%
 
 ## Agent Autonomy & Checkpoints
 

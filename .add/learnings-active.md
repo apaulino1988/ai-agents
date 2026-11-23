@@ -1,4 +1,4 @@
-# Active Learnings (13 of 18)
+# Active Learnings (13 of 19)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
@@ -33,9 +33,10 @@
 - **[medium]** ContextVar bridges tenancy into fixed-signature agent entry points (L-017, 2026-11-22)
   Threading business_id through every call would have broken monkeypatched test doubles (lambda history, msg / lambda date) on agent.run_turn and calendar hooks. Pattern that kept all 59 existing tests byte-identical: request layer resolves the tenant once and sets a ContextVar; fixed-signature layers (agent loop, calendar provider) read it; the service layer still takes explicit business_id=1 param… [truncated — full entry in learnings.json]
 
-## Index (5 more — title only, read JSON for full detail)
+## Index (6 more — title only, read JSON for full detail)
 
 - [medium] L-006 technical: gh OAuth needs 'workflow' scope to push CI files (2026-11-20)
+- [low] L-019 process: Cycle 3 complete: multi-tenant foundation planned-to-closed in one session (2026-11-22)
 - [low] L-016 technique: Twilio Senders API messaging_limit reveals Meta verification progress without the console (2026-11-22)
 - [low] L-009 technical: ADD 0.11.0 plugin cache ships without scripts/check-test-count.py (2026-11-21)
 - [low] L-007 technical: FastAPI form webhooks need python-multipart (2026-11-21)

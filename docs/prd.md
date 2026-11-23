@@ -119,6 +119,19 @@ The long-term architecture is a team of role-based agents (Secretary, Follow-up,
 - [ ] A customer books an appointment start-to-finish with no human intervention
 - [ ] Conversations are logged and reviewable
 
+#### M4: onboarding [NOW]
+**Goal:** First paying businesses onboarded self-serve.
+**Features (hill chart):**
+- `multi-tenant` — ✅ VERIFIED (cycle-3, 2026-11-22): tenant registry, per-business isolation, webhook/chat routing, admin API
+- `aws-deploy` — NOT_SHAPED (constraint: minimal cost — App Runner + smallest RDS, or defer RDS)
+- `a2p-registration` — NOT_SHAPED (10DLC for US SMS; Meta business verification likely cleared 2026-11-22)
+- `business-dashboard` — NOT_SHAPED (requires /add:ux sign-off before any cycle — alpha UI gate)
+- `self-serve-onboarding` — NOT_SHAPED (depends on multi-tenant ✓ and dashboard)
+**Success criteria:**
+- [ ] A second business onboarded end-to-end without code changes (admin API now; self-serve later)
+- [ ] Production environment live on AWS
+- [ ] US SMS delivery unblocked (A2P 10DLC registered)
+
 ### Maturity Promotion Path
 
 | From | To | Requirements |
@@ -161,3 +174,4 @@ Minimal embeddable React chat UI (the POC front door; SMS/WhatsApp come in M3).
 |------|---------|--------|---------|
 | 2026-11-20 | 0.1.0 | Andres | Initial draft from /add:init interview |
 | 2026-11-22 | 0.1.1 | Andres + Claude | M3 → DONE (live smoke passed); M4 → NOW; 10DLC registration added to M4 scope |
+| 2026-11-22 | 0.1.2 | Andres + Claude | M4 detail added; multi-tenant VERIFIED (cycle-3) |
