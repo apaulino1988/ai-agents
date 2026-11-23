@@ -1,51 +1,52 @@
 # Session Handoff — ai-agents
 
-**Written:** 2026-11-22 (cycle-3 planning + execution session, late evening)
-**Branch:** main @ `fd502de` (pushed; CI was pending at session end — check it)
+**Written:** 2026-11-23 (cycle-3 closed + cycle-4 planned; paused by Andres, resuming tomorrow)
+**Branch:** main @ `76e999d` (pushed, CI green)
 
 ## State
 
-- **Cycle 3 EXECUTED in one session:** multi-tenant foundation shipped.
-  - Spec `specs/multi-tenant.md` v0.2.0 Approved by Andres (AnswerQuestions:
-    default-slug fallback YES, admin API IN, profiles in DB) → Complete.
-  - Full TDD: RED (21 new tests, snapshot committed 9e24e98) → GREEN (80/80)
-    → REFACTOR (db.connect now a closing contextmanager — killed 414
-    unclosed-connection warnings) → VERIFY (ruff clean, 85% coverage).
-  - Shipped in fd502de: businesses table (profile JSON in DB), business_id on
-    all tenant tables, in-place legacy migration (original deployment =
-    tenant 1), webhook To-number routing + polite decline, chat slug routing,
-    admin API (ADMIN_TOKEN bearer, hidden when unset), tenant ContextVar
-    bridge (L-017), default-tenant env fallbacks (L-018).
-- **Meta business verification: likely cleared** (sender ONLINE, quality
-  HIGH, 250 customers/24hr — was err 63051). Confirm with next live delivery
-  (L-016: Senders API check technique).
-- Cycle plan `.add/cycles/cycle-3.md` status EXECUTED; run
-  `/add:cycle --complete` after Andres reviews the diff (alpha asks for a
-  human skim — he was mostly away during execution).
-- Uncommitted: spec status flip, cycle-3.md status, observations, L-016..018,
-  this handoff (ride the next commit).
+- **Cycle 3 CLOSED** (988e6f1): multi-tenant foundation VERIFIED — all 4
+  success criteria met, Andres signed off via /add:cycle --complete. M4 is
+  1/5 features done; PRD now carries the M4 hill chart.
+- **Cycle 4 PLANNED, not started** (`.add/cycles/cycle-4.md`, config
+  current_cycle=cycle-4): aws-deploy (< $15/mo hard ceiling, NO RDS) +
+  a2p-registration (10DLC as Standard brand under the LLC).
+- **SCOPE CHANGE (Andres, 2026-11-23): forming "Paulino AI Agents LLC" in
+  Maryland (PG County).** Full formation/launch plan delivered as Claude Doc
+  **"Paulino AI Agents LLC — Formation & Launch Plan"**
+  (claude.ai/artifact/AgorRWiFKpQQi6BG9dRxYx) — researched 2026-11-23:
+  $100 MD online filing ~7 business days; FinCEN BOI not required for US
+  companies; MD 3% IT-services tax (since 2025-07) likely applies — register
+  sales/use at formation, CPA to confirm; PG County home-office U&O = one
+  DPIE call (301-883-3840 opt 2) to confirm if needed.
+- Meta verification likely cleared (sender ONLINE, 250/24hr); confirm with
+  next live delivery; submit LLC docs in Meta Business Manager once formed.
 
-## Next up
+## Next up (tomorrow)
 
-1. Andres: skim fd502de (especially app/services/tenants.py, app/main.py
-   webhook routing) and confirm CI green → `/add:cycle --complete`.
-2. Next cycle candidates (M4): aws-deploy (KEEP CHEAP — Andres: App Runner +
-   smallest RDS or defer RDS; also closes a beta-promotion gap),
-   a2p-registration (long external waits — start early),
-   business-dashboard (BLOCKED on /add:ux first — alpha UI gate).
-3. Live smoke idea for multi-tenant: create a 2nd test business via admin
-   API, point a spare number at it (needs a 2nd Twilio number — defer).
+**Claude (autonomous):**
+1. Draft `specs/aws-deploy.md` (App Runner smallest instance, SQLite on
+   storage, Dockerfile, secrets via env, webhook re-point kills tunnel
+   routine) → Andres approves async → build.
+2. Draft `docs/a2p-runbook.md` (brand fields prefilled from LLC data,
+   campaign use-case text prewritten) so filing is 30 min post-EIN.
+
+**Andres (human gates, in order):**
+1. File the LLC + get EIN (doc Steps 1–3).
+2. AWS account/billing access for Claude.
+3. Approve first deploy (config: requires_approval).
+4. Pay/file 10DLC brand+campaign (~$48) when EIN arrives.
 
 ## Decisions / gotchas
 
-- ADMIN_TOKEN env var now gates the admin API (unset = endpoints 404).
-  Add a strong value to `.env` before using it live; never commit it.
-- Live DB migrates automatically on next app start (seeds tenant 1 from
-  data/business.json + env). data/business.json is now a SEED only —
-  runtime profile edits go through the admin API / DB.
-- channel_prefs was rebuilt with PK (business_id, phone) — migration is
-  idempotent (tested), but take a backup copy of secretary.db before first
-  prod start anyway.
-- Tunnel URL rotates on restart (docs/smoke-test.md routine).
-- Secrets drift risk: always `git status` + scan before commits.
+- Cycle-4 decisions (Andres 2026-11-23): AWS ceiling < $15/mo; mostly away;
+  LLC over sole-prop for 10DLC.
+- 10DLC brand name must EXACTLY match "Paulino AI Agents LLC".
+- ADMIN_TOKEN gates the admin API (unset = 404); set a strong value in .env
+  before live use; never commit it.
+- Live DB auto-migrates to multi-tenant on next app start; back up
+  secretary.db before first prod start.
+- business-dashboard still BLOCKED on /add:ux (alpha UI gate).
+- Beta promotion gaps: PR workflow, 2nd env (aws-deploy), mypy.
+- Secrets drift risk: git status + scan before every commit.
 - Write this handoff at every session end.
